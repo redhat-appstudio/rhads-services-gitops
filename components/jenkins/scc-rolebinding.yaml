@@ -1,0 +1,14 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  # The name is descriptive. Kustomize will add the namespace.
+  name: jenkins-scc-jenkins-agent-base
+subjects:
+  # This targets the 'jenkins' ServiceAccount. Kustomize will add the namespace.
+  - kind: ServiceAccount
+    name: jenkins
+roleRef:
+  # This is a special, system-managed ClusterRole that grants the 'use' verb for a specific SCC
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:jenkins-agent-base

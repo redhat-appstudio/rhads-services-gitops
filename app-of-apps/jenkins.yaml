@@ -1,0 +1,34 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: jenkins
+  namespace: gitops-resources
+spec:
+  destination:
+    namespace: jenkins
+    server: https://kubernetes.default.svc
+  project: gitops-resources
+  sources:
+    - repoURL: "https://github.com/redhat-appstudio/rhtap-services-gitops.git"
+      targetRevision: jenkins
+      path: "components/jenkins"
+    - repoURL: https://charts.jenkins.io
+      chart: jenkins
+      targetRevision: 5.8.73 # Use a specific chart version
+      helm:
+        releaseName: jenkins
+        valueFiles:
+          - $values/components/jenkins/values.yaml
+    - repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops.git
+      targetRevision: HEAD
+      ref: values
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: openshift-gitops
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true

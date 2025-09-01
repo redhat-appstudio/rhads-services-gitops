@@ -1,0 +1,6 @@
+# Ignore Kubernetes/ArgoCD files
+*.yaml
+*.yml
+
+# Ignore documentation
+*.md

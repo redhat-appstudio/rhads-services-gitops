@@ -7,7 +7,7 @@ This repo contains gitops definitions for services needed for testing RHTAP/TSSC
 Steps to deploy these services on new cluster:
 1. Edit `./envfile` - fill out the secrets needed.
 2. Run `./create_secrets.sh`. This will create the secrets on your cluster
-3. Run `./bootstrap.sh`. 
+3. Run `./bootstrap.sh`.
     * This script installs Opehsift Gitops and creates initial app-of-apps.
 
 ### Artifactory - After deployed on new cluster perform the following to setup.
@@ -58,6 +58,45 @@ $ <Copy the Docker auth content into a file, for instance auth.json>
 $ podman push --authfile <auth.json> <registry hostname>/rhtap/mysql:latest
 ```
 
+### Jenkins - After deployed on new cluster perform the following to setup.
+
+1. Get Jenkins console URL
+```bash
+$ echo "https://$(kubectl -n jenkins get route jenkins -o jsonpath='{.spec.host}')"
+```
+
+2. Get admin password
+The default username is `admin`. Retrieve the password:
+```bash
+$ kubectl -n jenkins get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d
+```
+
+3. Create API token for admin user
+   - Log in to Jenkins console with admin credentials
+   - Click on your username (admin) in the upper right corner
+   - Click on your username link again to go to your user page
+   - Click `Security` from the left sidebar menu
+   - In the `API Token` section, click `Add new token` button
+   - Enter a token name in the dialog (e.g., "TSSC-Pipeline-Token")
+   - Click `Generate` button
+   - **Important**: A dialog will display the token with message "Copy this token now, because it cannot be recovered in the future."
+   - Copy the token value (use the copy button next to the token)
+   - Click `Done` to close the dialog
+
+   Alternative method via REST API:
+   ```bash
+   # Generate token via API
+   curl -X POST "https://$(kubectl -n jenkins get route jenkins -o jsonpath='{.spec.host}')/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken" \
+     --user admin:$(kubectl -n jenkins get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d) \
+     --data 'newTokenName=TSSC-Pipeline-Token'
+   ```
+
+4. (Optional) Verify agent configuration
+```bash
+# Check if pod template is configured correctly
+$ kubectl -n jenkins get configmap jenkins-jenkins-jcasc-config -o yaml | grep -A 20 "podTemplates:"
+```
+
 ### Nexus - After deployed on new cluster perform the following to setup.
 
 ## Setup a Registry
@@ -81,7 +120,5 @@ username is `admin`,  The password can be found in the `/nexus-data/admin.passwo
 
 ### Adding new component
 
-* Create your component `Application` CR in `./app-of-apps` folder. 
+* Create your component `Application` CR in `./app-of-apps` folder.
 * Create new folder in `./components` folder holding all the resources of your new component.
-
-

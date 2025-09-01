@@ -1,0 +1,182 @@
+controller:
+  componentName: "jenkins-controller"
+  image:
+    registry: "docker.io"
+    repository: "jenkins/jenkins"
+    tag:
+    tagLabel: jdk17
+    pullPolicy: "IfNotPresent"
+  resources:
+    requests:
+      memory: "2Gi"
+    limits:
+      memory: "2Gi"
+  # -- Number of executors on the Jenkins controller (0 = no builds run on master)
+  numExecutors: 0
+  # -- Name of default cloud configuration.
+  cloudName: "openshift"
+  # Put labels on Jenkins controller pod
+  # -- Custom Pod labels (an object with `label-key: label-value` pairs)
+  podLabels:
+    tssc-jenkins-agent: true
+  JCasC:
+    defaultConfig: true
+    configScripts:
+      jenkins-system: |
+        jenkins:
+          systemMessage: "Jenkins configured with Configuration as Code for RHTAP on OpenShift"
+          securityRealm:
+            local:
+              allowsSignup: false
+              users:
+                - id: "admin"
+                  name: "Jenkins Admin"
+                  password: "${chart-admin-password}"
+          authorizationStrategy:
+            loggedInUsersCanDoAnything:
+              allowAnonymousRead: false
+  serviceType: ClusterIP
+  servicePort: 8080
+  # OpenShift 4.18 uses restricted-v2 SCC by default. To allow the init container to write to the
+  # persistent volume, we must set the fsGroup. This ensures the volume is group-writable by the
+  # Jenkins user (gid 1000), resolving the permission denied error.
+  usePodSecurityContext: true
+  podSecurityContextOverride:
+    fsGroup: 1000
+  containerSecurityContext: {}
+  installPlugins:
+    - openshift-client
+    - openshift-login
+    - gitlab-plugin
+    - github
+    - bitbucket
+    - kubernetes
+    - workflow-aggregator
+    - git
+    - configuration-as-code
+    - job-dsl:latest
+  # Openshift route
+  route:
+    # -- Enables openshift route
+    enabled: true
+    # -- Route labels
+    labels: {}
+    # -- Route annotations
+    annotations: {}
+    # -- Route path
+    path:
+
+persistence:
+  enabled: true
+  size: "100Gi"
+  # If you have a specific storage class, uncomment and set it here
+  # storageClass: "your-storage-class"
+
+rbac:
+  create: true
+  # This is important for OpenShift to manage SCCs correctly.
+  useOpenShiftNonRootSCC: true
+  serviceAccount:
+    create: true
+    name: "jenkins"
+
+agent:
+  # -- Enable Kubernetes plugin jnlp-agent podTemplate
+  enabled: true
+  # -- Max number of agents to launch for a whole cluster.
+  containerCap: 100
+  # -- Max number of agents to launch for this type of agent
+  instanceCap: 2147483647
+  # -- Disable the default Jenkins Agent configuration (false = supports "agent any")
+  disableDefaultAgent: false
+  # -- Agent Pod base name
+  podName: default
+  # -- Configure working directory for default agent
+  workingDir: "/home/jenkins/agent"
+  # -- Always pull agent container image before build
+  alwaysPullImage: true
+  # -- Resources allocation for default agent
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
+
+  # Below is the implementation of custom pod templates for the default configured kubernetes cloud.
+  # Add a key under podTemplates for each pod template. Each key (prior to | character) is just a label, and can be any value.
+  # Keys are only used to give the pod template a meaningful name. The only restriction is they may only contain RFC 1123 \ DNS label
+  # characters: lowercase letters, numbers, and hyphens. Each pod template can contain multiple containers.
+  # For this pod templates configuration to be loaded, the following values must be set:
+  # controller.JCasC.defaultConfig: true
+  # Best reference is https://<jenkins_url>/configuration-as-code/reference#Cloud-kubernetes. The example below creates a python pod template.
+  # -- Configures extra pod templates for the default kubernetes cloud
+  podTemplates:
+    tssc: |
+      - name: tssc
+        label: tssc-jenkins-agent
+        serviceAccount: jenkins
+        namespace: jenkins
+        idleMinutes: 0
+        podRetention: Never
+        nodeUsageMode: NORMAL
+        yaml: |
+          spec:
+            initContainers:
+            - name: agent-injector
+              image: jenkins/inbound-agent:3341.v0766d82b_dec0-1
+              command:
+              - sh
+              - -c
+              - |
+                mkdir -p /agent-volume/usr/share/jenkins
+                cp /usr/share/jenkins/agent.jar /agent-volume/usr/share/jenkins/agent.jar
+                mkdir -p /workspace/agent
+              volumeMounts:
+              - name: agent-volume
+                mountPath: /agent-volume
+              - name: workspace-volume
+                mountPath: /workspace
+            containers:
+            - name: jnlp
+              image: quay.io/rhtap/tssc-jenkins-agent:latest
+              command:
+              - sh
+              - -c
+              - java -jar /usr/share/jenkins/agent.jar -url $JENKINS_URL -tunnel $JENKINS_TUNNEL -workDir /workspace/agent $JENKINS_SECRET $JENKINS_AGENT_NAME
+              env:
+              - name: JENKINS_URL
+                value: http://jenkins.jenkins.svc.cluster.local:8080/
+              - name: JENKINS_TUNNEL
+                value: jenkins-agent.jenkins.svc.cluster.local:50000
+              - name: _BUILDAH_STARTED_IN_USERNS
+                value: ""
+              - name: BUILDAH_ISOLATION
+                value: chroot
+              - name: STORAGE_DRIVER
+                value: vfs
+              imagePullPolicy: Always
+              resources:
+                requests:
+                  cpu: 100m
+                  memory: 256Mi
+                limits:
+                  cpu: 500m
+                  memory: 1Gi
+              workingDir: /workspace/agent
+              volumeMounts:
+              - name: workspace-volume
+                mountPath: /workspace
+              - name: agent-volume
+                mountPath: /usr/share/jenkins
+                subPath: usr/share/jenkins
+              - name: buildah-storage
+                mountPath: /home/jenkins/.local/share/containers
+            volumes:
+            - name: workspace-volume
+              emptyDir: {}
+            - name: agent-volume
+              emptyDir: {}
+            - name: buildah-storage
+              emptyDir: {}

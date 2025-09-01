@@ -13,7 +13,7 @@ spec:
     repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
     targetRevision: HEAD
   syncPolicy:
-    automated: 
+    automated:
       prune: true
       selfHeal: true
     syncOptions:
