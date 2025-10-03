@@ -10,6 +10,7 @@ oc new-project minio-operator
 
 # TPA - Grant Security Context Constraints (SCCs): Grant the non-root MinIO and PostgreSQL components the ability to run in the application namespaces.
 oc adm policy add-scc-to-user anyuid -z default -n minio-operator
+oc adm policy add-scc-to-user anyuid -z minio-operator -n minio-operator
 oc adm policy add-scc-to-user anyuid -z default -n ${TPA_NAMESPACE}
 
 # Secret 1: TPA DB Connection Details (postgresql-credentials)

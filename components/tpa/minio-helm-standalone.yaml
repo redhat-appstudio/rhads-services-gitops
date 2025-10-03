@@ -1,0 +1,63 @@
+# components/tpa/02-minio-helm-standalone.yaml (Sync Wave 2)
+# Replaces the MinIO Operator and Tenant deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: minio-tpa-storage-helm
+  namespace: gitops-resources
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: gitops-resources
+  source:
+    repoURL: https://charts.bitnami.com/bitnami
+    targetRevision: latest
+    chart: minio
+    helm:
+      # --- MINIO Configuration ---
+      values: |
+        # Deployment configuration
+        fullnameOverride: minio-tpa-storage
+        
+        # Security Configuration (CRITICAL for OpenShift)
+        # Allows OpenShift to assign UIDs rather than using a fixed, conflicting one.
+        containerSecurityContext:
+          enabled: false
+        podSecurityContext:
+          enabled: false
+          # MinIO runs as user 1000, we must allow the 'anyuid' setting
+          # The 'anyuid' SCC has already been applied to the 'tpa-project' default SA.
+        
+        # Service credentials (References the manually created secret)
+        auth:
+          existingSecret: storage-credentials
+          rootUserKey: user
+          rootPasswordKey: password
+          
+        # Persistence (Storage)
+        persistence:
+          enabled: true
+          # Use your cluster's StorageClass (e.g., ODF or standard SSD)
+          size: 20Gi
+        
+        # Service Exposure (for internal communication with TPA)
+        service:
+          type: ClusterIP
+          port: 9000
+          
+        # Resources
+        resources:
+          requests:
+            cpu: 250m
+            memory: 512Mi
+          limits:
+            cpu: 500m
+            memory: 1Gi
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: tpa-project
+  syncPolicy:
+    automated: { prune: true, selfHeal: true }
+    syncOptions:
+      - CreateNamespace=false
+
