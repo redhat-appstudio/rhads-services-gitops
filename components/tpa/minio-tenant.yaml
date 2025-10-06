@@ -9,8 +9,6 @@ spec:
   credsSecret:
     name: storage-credentials 
 
-  image: quay.io/minio/operator:v5.0.18
-
   pools:
     - name: pool-0
       servers: 4 
