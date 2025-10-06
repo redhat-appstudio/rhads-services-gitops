@@ -2,13 +2,13 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: minio-aistor-object-store-operator
-  namespace: tpa-project
+  name: minio-object-store-operator
+  namespace: aistor
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
   channel: stable
-  name: minio-aistor-object-store-operator
+  name: minio-object-store-operator
   source: certified-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
