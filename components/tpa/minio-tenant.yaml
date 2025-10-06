@@ -1,4 +1,4 @@
-apiVersion: minio.min.io/v2
+apiVersion: aistor.min.io/v1
 kind: Tenant
 metadata:
   name: minio-tpa-storage
@@ -8,7 +8,6 @@ metadata:
 spec:
   credsSecret:
     name: storage-credentials 
-
   pools:
     - name: pool-0
       servers: 4 
