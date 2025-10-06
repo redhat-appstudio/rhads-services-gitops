@@ -1,8 +1,0 @@
-kind: Namespace
-metadata:
-  name: openshift-storage
-  annotations:
-    argocd.argoproj.io/sync-wave: "0" # CRITICAL: Deploys first
-  labels:
-    # ODF sometimes requires this label for monitoring integration
-    openshift.io/cluster-monitoring: "true" 

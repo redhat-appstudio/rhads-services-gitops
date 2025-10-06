@@ -6,6 +6,8 @@ source ./envfile
 #oc new-project hive
 #oc new-project artifactory
 oc new-project ${TPA_NAMESPACE}
+oc new-project openshift-storage
+oc create namespace openshift-storage
 
 # TPA - Grant Security Context Constraints (SCCs): Grant the non-root MinIO and PostgreSQL components the ability to run in the application namespaces.
 #oc adm policy add-scc-to-user anyuid -z default -n minio-operator

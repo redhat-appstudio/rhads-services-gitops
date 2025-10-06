@@ -3,7 +3,6 @@ kind: Kustomization
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 resources:
-  - odf-namespace.yaml
   - odf-subscription.yaml
   - odf-cluster.yaml
   - odf-objectbucketclaim.yaml
