@@ -1,13 +1,13 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: postgres-operator
-  namespace: tpa-project
+  name: cloud-native-postgresql
+  namespace: openshift-operators
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
   channel: stable
-  name: postgresql-operator
+  name: cloud-native-postgresql
   source: certified-operators
   sourceNamespace: openshift-marketplace
   installPlanApproval: Automatic
@@ -15,12 +15,12 @@ spec:
 apiVersion: operators.coreos.com/v1alpha1
 kind: Subscription
 metadata:
-  name: keycloak-operator
-  namespace: tpa-project
+  name: rhbk-operator
+  namespace: rhbk-operator
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  channel: stable
+  channel: stable-v24
   name: rhbk-operator
   source: redhat-operators
   sourceNamespace: openshift-marketplace

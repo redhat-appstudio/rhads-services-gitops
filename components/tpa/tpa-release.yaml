@@ -50,9 +50,9 @@ spec:
           issuerUrl: https://keycloak.apps.example.com/auth/realms/tpa-realm
           clients:
             frontend:
-              clientId: tpa-frontend
+              clientId: frontend
             cli:
-              clientId: tpa-cli
+              clientId: cli
               clientSecret:
                 valueFrom: { secretKeyRef: { name: oidc-cli, key: client-secret } }
                 

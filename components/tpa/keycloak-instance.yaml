@@ -2,20 +2,24 @@ apiVersion: k8s.keycloak.org/v2alpha1
 kind: Keycloak
 metadata:
   name: tpa-keycloak
-  namespace: tpa-project
+  namespace: rhbk-operator
+  labels:
+    app: keycloak
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
   instances: 1
+  additionalOptions:
+    - name: enable-recovery
+      value: "true"
+  transaction:
+    xaEnabled: true
   adminCredentials: { secretName: keycloak-admin-secret }
   db:
     vendor: postgres
+    database: keycloak
     host: kc-postgres-primary.tpa-project.svc.cluster.local
-    port: 5432
-    database: keycloakdb
-    
     usernameSecret: { name: kc-postgres-kcuser-secret, key: user }
     passwordSecret: { name: kc-postgres-kcuser-secret, key: password }
-  
-  hostname: 
+  hostname:
     strict: true
