@@ -19,7 +19,7 @@ spec:
     vendor: postgres
     database: tpa-db
     port: 5432
-    host: kc-postgres-primary.tpa-project.svc.cluster.local
+    host: tpa-postgres-primary.tpa-project.svc.cluster.local
     usernameSecret: { name: kc-postgres-kcuser-secret, key: user }
     passwordSecret: { name: kc-postgres-kcuser-secret, key: password }
   hostname:
