@@ -24,3 +24,9 @@ spec:
     passwordSecret: { name: postgresql-credentials, key: db.password }
   hostname:
     strict: true
+    hostname: tpa-keycloak-tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com
+
+  http:
+    httpEnabled: true
+    ingress:
+      enabled: true 
