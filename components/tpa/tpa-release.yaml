@@ -16,7 +16,7 @@ spec:
         replicas: 1
         openshift: &tpaOpenShift
           useServiceCa: true
-        appDomain: "${APP_DOMAIN_URL}"
+        appDomain: -tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com
 
         ingress:
           className: openshift-default
@@ -47,7 +47,7 @@ spec:
           password: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.password } } }
 
         oidc:
-          issuerUrl: https://keycloak.apps.example.com/auth/realms/tpa-realm
+          issuerUrl: https://tpa-keycloak-tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com/auth/realms/tpa-realm
           clients:
             frontend:
               clientId: frontend

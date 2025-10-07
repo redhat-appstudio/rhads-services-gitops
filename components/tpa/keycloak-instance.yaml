@@ -17,10 +17,13 @@ spec:
   adminCredentials: { secretName: keycloak-admin-secret }
   db:
     vendor: postgres
-    database: tpa-db
-    port: 5432
-    host: tpa-postgres-primary.tpa-project.svc.cluster.local
-    usernameSecret: { name: kc-postgres-kcuser-secret, key: user }
-    passwordSecret: { name: kc-postgres-kcuser-secret, key: password }
+    host:
+      valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.host } }
+    port:
+      valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.port } }
+    database:
+      valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.name } }
+    usernameSecret: { name: postgresql-credentials, key: db.user }
+    passwordSecret: { name: postgresql-credentials, key: db.password }
   hostname:
     strict: true
