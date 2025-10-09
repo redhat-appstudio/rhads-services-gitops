@@ -16,7 +16,11 @@ spec:
         replicas: 1
         openshift: &tpaOpenShift
           useServiceCa: true
-        appDomain: -tssc-tpa.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com
+        appDomain:
+          valueFrom:
+            secretKeyRef:
+              name: tpa-pgsql-user
+              key: appDomain
         collector: {}
         ingress:
           className: openshift-default
@@ -91,7 +95,11 @@ spec:
           enabled: false
 
         oidc: &tpaOIDC
-          issuerUrl: https://sso.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com/realms/chicken
+          issuerUrl:
+            valueFrom:
+              secretKeyRef:
+                name: tssc-trustification-integration
+                key: oidc_issuer_url
           clients:
             frontend:
               clientId: frontend

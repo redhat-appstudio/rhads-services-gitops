@@ -14,19 +14,6 @@ spec:
       storage: 50Gi
 ---
 apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: tpa-pgsql-user
-  namespace: tssc-tpa
-stringData:
-  dbname: tpa
-  host: tpa-pgsql.tssc-tpa.svc
-  user: tpa
-  port: "5432"
-  password: "YXJqf6x8ksimK0puUpFDVBMo"
----
-apiVersion: v1
 kind: Service
 metadata:
   name: tpa-pgsql
@@ -117,19 +104,6 @@ spec:
   resources:
     requests:
       storage: 50Gi
----
-apiVersion: v1
-kind: Secret
-type: Opaque
-metadata:
-  name: keycloak-pgsql-user
-  namespace: tssc-keycloak
-stringData:
-  dbname: keycloak
-  host: keycloak-pgsql.tssc-keycloak.svc
-  user: keycloak
-  port: "5432"
-  password: "ZVqiMdYDSXcr0YrCZ5lexMhs"
 ---
 apiVersion: v1
 kind: Service

@@ -6,7 +6,7 @@ metadata:
 spec:
   destination:
     server: https://kubernetes.default.svc
-    namespace: tpa-project
+    namespace: tssc-tpa
   project: gitops-resources
   source:
     path: ./components/tpa
