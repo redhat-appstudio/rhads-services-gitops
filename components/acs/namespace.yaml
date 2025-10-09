@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: rhacs-operator
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+  labels:
+    openshift.io/cluster-monitoring: "true"

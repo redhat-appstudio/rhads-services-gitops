@@ -4,3 +4,6 @@
 
 # OpenShift kubeconfig
 kubeconfig
+
+# Serena MCP project files
+.serena

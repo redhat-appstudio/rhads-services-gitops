@@ -115,6 +115,88 @@ username is `admin`,  The password can be found in the `/nexus-data/admin.passwo
 
 5. Go to the `Realms` under `Security` on the left navigation bar and click on `Docker Bearer Token Realm` and save the settings.
 
+### ACS (Red Hat Advanced Cluster Security) - After deployed on new cluster perform the following to setup.
+
+**✅ RHACS is fully deployed and operational!**
+
+1. Get RHACS Central console URL
+```bash
+$ echo "https://$(kubectl -n rhacs-operator get route central -o jsonpath='{.spec.host}')"
+```
+
+2. Get admin password
+The default username is `admin`. Retrieve the password:
+```bash
+$ kubectl -n rhacs-operator get secret central-htpasswd -o jsonpath='{.data.password}' | base64 -d
+```
+
+3. Create API token for RHACS
+
+   API tokens are required for image scanning in CI/CD pipelines, `roxctl` CLI operations, and programmatic access to RHACS APIs.
+
+   **Method 1: Via Web UI (Recommended)**
+
+   a. Access RHACS Central using the URL from step 1
+
+   b. Login with admin credentials (username: `admin`, password from step 2)
+
+   c. Navigate to API Token Creation:
+   - Click **Platform Configuration** (⚙️ gear icon) in the left sidebar
+   - Select **Integrations**
+   - Scroll to **Authentication Tokens** section
+   - Click **API Token**
+   - Click **Generate Token** button
+
+   d. Configure token settings:
+   - **Name**: Enter descriptive name (e.g., "Image Scanning Token", "CI/CD Pipeline")
+   - **Role**: Select appropriate role:
+     - **Continuous Integration**: For CI/CD pipelines and automated scanning
+     - **Analyst**: For read-only access to monitoring and dashboards
+     - **Admin**: For full administrative access (use cautiously!)
+     - **Sensor Creator**: For multi-cluster deployments
+   - **Expiration** (optional but recommended): Set token lifetime (e.g., 90 days, 1 year)
+
+   e. Generate and save token:
+   - Click **Generate**
+   - **⚠️ CRITICAL**: Copy the token immediately - it's shown only once!
+   - Store securely in password manager or secrets vault
+
+   **Method 2: Via roxctl CLI**
+
+   For automation or script-based token creation:
+   ```bash
+   # Get Central URL and admin password
+   CENTRAL_URL="$(kubectl get route central -n rhacs-operator -o jsonpath='{.spec.host}'):443"
+   ADMIN_PASSWORD=$(kubectl get secret central-htpasswd -n rhacs-operator -o jsonpath='{.data.password}' | base64 -d)
+
+   # Download roxctl (if not already installed)
+   curl -O https://${CENTRAL_URL}/api/cli/download/roxctl-linux
+   chmod +x roxctl-linux
+   sudo mv roxctl-linux /usr/local/bin/roxctl
+
+   # Create API token
+   roxctl --insecure-skip-tls-verify \
+     -e "${CENTRAL_URL}" \
+     -p "${ADMIN_PASSWORD}" \
+     central userpki create-token \
+     --name "my-ci-cd-token" \
+     --role "Continuous Integration"
+   ```
+
+4. (Optional) Using the API token for image scanning
+
+   ```bash
+   # Set environment variables
+   export ROX_CENTRAL_ENDPOINT="$(kubectl get route central -n rhacs-operator -o jsonpath='{.spec.host}'):443"
+   export ROX_API_TOKEN="your-token-here"
+
+   # Scan an image
+   roxctl --insecure-skip-tls-verify \
+     -e "${ROX_CENTRAL_ENDPOINT}" \
+     image scan \
+     --image "quay.io/myorg/myimage:v1.0.0" \
+     --output table
+   ```
 
 ## Development
 

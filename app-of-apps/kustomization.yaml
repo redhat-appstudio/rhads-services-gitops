@@ -7,3 +7,4 @@ resources:
   - jfrog-artifactory-jcr.yaml
   - nexus.yaml
   - jenkins.yaml
+  - acs.yaml
