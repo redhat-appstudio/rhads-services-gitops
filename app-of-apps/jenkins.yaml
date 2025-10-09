@@ -10,7 +10,7 @@ spec:
   project: gitops-resources
   sources:
     - repoURL: "https://github.com/redhat-appstudio/rhtap-services-gitops.git"
-      targetRevision: jenkins
+      targetRevision: main
       path: "components/jenkins"
     - repoURL: https://charts.jenkins.io
       chart: jenkins
@@ -20,7 +20,7 @@ spec:
         valueFiles:
           - $values/components/jenkins/values.yaml
     - repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops.git
-      targetRevision: HEAD
+      targetRevision: main
       ref: values
   syncPolicy:
     managedNamespaceMetadata:
