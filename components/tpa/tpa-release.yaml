@@ -4,7 +4,7 @@ metadata:
   name: trusted-profile-analyzer
   namespace: gitops-resources
   annotations:
-    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/sync-wave: "6"
 spec:
   project: gitops-resources 
   source:
@@ -16,8 +16,8 @@ spec:
         replicas: 1
         openshift: &tpaOpenShift
           useServiceCa: true
-        appDomain: -tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com
-
+        appDomain: -tssc-tpa.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com
+        collector: {}
         ingress:
           className: openshift-default
           additionalAnnotations:
@@ -29,34 +29,85 @@ spec:
 
         database:
           sslMode: disable
-          host: { valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.host } } }
-          port: { valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.port } } }
-          name: { valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.name } } }
-          username: { valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.user } } }
-          password: { valueFrom: { secretKeyRef: { name: postgresql-credentials, key: db.password } } }
+          host:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: host
+          port:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: port
+          name:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: dbname
+          username:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: user
+          password:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: password
 
         createDatabase:
-          enabled: true
-          name: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.name } } }
-          username: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.user } } }
-          password: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.password } } }
+          name:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: dbname
+          username:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: user
+          password:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: password
 
         migrateDatabase:
-          enabled: true
-          username: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.user } } }
-          password: { valueFrom: { secretKeyRef: { name: postgresql-admin-credentials, key: db.password } } }
+          username:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: user
+          password:
+            valueFrom:
+              secretKeyRef:
+                name: tpa-pgsql-user
+                key: password
 
-        oidc:
-          issuerUrl: https://tpa-keycloak-tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com/auth/realms/tpa-realm
+        infrastructure:
+          port: 9010
+
+        metrics:
+          enabled: false
+
+        oidc: &tpaOIDC
+          issuerUrl: https://sso.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com/realms/chicken
           clients:
             frontend:
               clientId: frontend
             cli:
               clientId: cli
               clientSecret:
-                valueFrom: { secretKeyRef: { name: oidc-cli, key: client-secret } }
+                valueFrom:
+                  secretKeyRef:
+                    name: tpa-realm-chicken-clients
+                    key: cli
                 
         modules:
+          createDatabase:
+            enabled: true
+          migrateDatabase:
+            enabled: true
           createImporters:
             enabled: true
             importers:
@@ -67,6 +118,13 @@ spec:
                   source: https://access.redhat.com/security/data/sbom/beta/
                   keys:
                     - https://access.redhat.com/security/data/97f5eac4.txt#77E79ABE93673533ED09EBE2DCE3823597F5EAC4
+                  disabled: true
+                  fetchRetries: 50
+              redhat-csaf:
+                csaf:
+                  description: All Red Hat CSAF data
+                  period: 1d
+                  source: redhat.com
                   disabled: true
                   fetchRetries: 50
               cve:
@@ -82,9 +140,32 @@ spec:
                   source: https://github.com/github/advisory-database
                   path: advisories
                   disabled: false
+          server:
+            enabled: true
+            image: {}
+            infrastructure: {}
+            ingress: {}
+            metrics: {}
+            replicas: 1
+            resources:
+              requests:
+                cpu: 1
+                memory: 8Gi
+            rust: {}
+            tracing: {}
+
+        partOf: trustify
+        rust:
+          logFilter: debug
+          backtrace: true
+        tls: &tpaTLS
+          serviceEnabled: true
+          additionalTrustAnchor: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+        tracing:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
-    namespace: tpa-project
+    namespace: tssc-tpa
   syncPolicy:
     automated: { prune: true, selfHeal: true }
 

@@ -1,12 +1,64 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  annotations:
+    route.openshift.io/termination: reencrypt
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: keycloak
+  namespace: tssc-keycloak
+  name: keycloak
+spec:
+  host: sso.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com
+  to:
+    kind: Service
+    name: keycloak
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: keycloak-tls
+    argocd.argoproj.io/sync-wave: "4"
+  namespace: tssc-keycloak
+  name: keycloak
+spec:
+  type: ClusterIP
+  ports:
+    - name: https
+      protocol: TCP
+      port: 8443
+      targetPort: 8443
+    - name: http
+      protocol: TCP
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: keycloak
+    app.kubernetes.io/instance: keycloak
+    app.kubernetes.io/managed-by: keycloak-operator
+  sessionAffinity: None
+  ipFamilyPolicy: SingleStack
+  ipFamilies:
+    - IPv4
+  internalTrafficPolicy: Cluster
+---
 apiVersion: k8s.keycloak.org/v2alpha1
 kind: Keycloak
 metadata:
-  name: tpa-keycloak
-  namespace: tpa-project
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
   labels:
     app: keycloak
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
+  namespace: tssc-keycloak
+  name: keycloak 
 spec:
   instances: 1
   additionalOptions:
@@ -14,19 +66,23 @@ spec:
       value: "true"
   transaction:
     xaEnabled: true
-  adminCredentials: { secretName: keycloak-admin-secret }
   db:
     vendor: postgres
-    host: tpa-postgres-primary.tpa-project.svc.cluster.local
-    port: 5432
-    database: tpa-db
-    usernameSecret: { name: postgresql-credentials, key: db.user }
-    passwordSecret: { name: postgresql-credentials, key: db.password }
+    database: keycloak
+    host: keycloak-pgsql
+    usernameSecret:
+      name: keycloak-pgsql-user
+      key: user
+    passwordSecret:
+      name: keycloak-pgsql-user
+      key: password
   hostname:
-    strict: true
-    hostname: tpa-keycloak-tpa-project.apps.rosa.cstt4-ters7-am9.i2pn.p3.openshiftapps.com
-
+    hostname: sso.apps.rosa.ngh9b-yzyko-pc5.jbid.p3.openshiftapps.com
+    strict: false
+    strictBackchannel: false
   http:
-    httpEnabled: true
-    ingress:
-      enabled: true 
+    httpEnabled: false
+    tlsSecret: keycloak-tls
+  ingress:
+    enabled: false
+

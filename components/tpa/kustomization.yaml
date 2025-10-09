@@ -3,6 +3,9 @@ kind: Kustomization
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
 resources:
+  - namespaces.yaml
   - subscription.yaml
+  - infrastructure.yaml
   - keycloak-instance.yaml
+  - realm.yaml
   - tpa-release.yaml
