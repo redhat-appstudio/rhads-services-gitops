@@ -5,6 +5,7 @@ commonAnnotations:
 resources:
   - namespaces.yaml
   - subscription.yaml
+  - tpa-config-ref.yaml 
   - infrastructure.yaml
   - keycloak-instance.yaml
   - realm.yaml
