@@ -14,7 +14,7 @@ replacements:
   # REPLACEMENT 1: Inject Static Hostname into the Keycloak Route
   # ------------------------------------------------------------------
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.external_host
     targets:
@@ -29,7 +29,7 @@ replacements:
         fieldPaths:
           - spec.hostname.hostname
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.app_domain_url
       # group: v1
@@ -40,8 +40,8 @@ replacements:
         fieldPaths:
           - spec.source.helm.values.appDomain
   - source:
-      kind: Secret
-      name: tssc-trustification-integration
+      kind: ConfigMap
+      name: tpa-injection-config
       fieldPath: data.oidc_issuer_url
     targets:
       - select:
@@ -50,7 +50,7 @@ replacements:
         fieldPaths:
           - spec.source.helm.values.oidc.issuerUrl
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.manager
     targets:
@@ -60,7 +60,7 @@ replacements:
         fieldPaths:
           - spec.realm.clients[7].credentials[0].value
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.user
     targets:
@@ -70,7 +70,7 @@ replacements:
         fieldPaths:
           - spec.realm.clients[8].credentials[0].value
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.cli
     targets:
@@ -80,7 +80,7 @@ replacements:
         fieldPaths:
           - spec.realm.clients[9].credentials[0].value
   - source:
-      kind: Secret
+      kind: ConfigMap
       name: tpa-injection-config
       fieldPath: data.pass
     targets:
