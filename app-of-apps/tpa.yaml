@@ -15,11 +15,11 @@ spec:
     kustomize:
       parameters:
         - name: KEYCLOAK_HOSTNAME
-          value: KEYCLOAK_PLACEHOLDER
+          value: sso.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com
         - name: APP_DOMAIN_URL
-          value: APP_DOMAIN_PLACEHOLDER
+          value: -tssc-tpa.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com
         - name: OIDC_ISSUER_URL
-          value: OIDC_ISSUER_PLACEHOLDER
+          value: https://sso.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com/realms/chicken
   syncPolicy:
     managedNamespaceMetadata:
       labels:
