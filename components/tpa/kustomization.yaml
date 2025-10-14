@@ -45,7 +45,7 @@ replacements:
           kind: KeycloakRealmImport
           name: keycloak-chicken
         fieldPaths:
-          - spec.realm.users[0].credentials[0].value
+          - spec.realm.users.0.credentials.0.value
   - source:
       kind: ConfigMap
       name: tpa-values-source
