@@ -15,7 +15,6 @@ resources:
   - infrastructure.yaml
   - keycloak-instance.yaml
   - realm.yaml
-  - tpa-release.yaml
 replacements:
   # ------------------------------------------------------------------
   # REPLACEMENT 1: Inject Static Hostname into the Keycloak Route

@@ -8,18 +8,28 @@ spec:
     server: https://kubernetes.default.svc
     namespace: tssc-tpa
   project: gitops-resources
-  source:
+  sources:
+  - repoURL: https://github.com/smatula/rhtap-services-gitops
     path: ./components/tpa
-    repoURL: https://github.com/smatula/rhtap-services-gitops
     targetRevision: tpa
     kustomize:
       parameters:
         - name: KEYCLOAK_HOSTNAME
           value: sso.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com
-        - name: APP_DOMAIN_URL
+  - repoURL: https://charts.openshift.io/
+    targetRevision: 1.1.1
+    chart: redhat-trusted-profile-analyzer
+    helm:
+      parameters
+        - name: appDomain
           value: -tssc-tpa.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com
-        - name: OIDC_ISSUER_URL
+        - name: oidc.issuerUrl
           value: https://sso.apps.cluster-hxfbn.hxfbn.sandbox1576.opentlc.com/realms/chicken
+      valueFiles:
+        - $values/components/tpa/values.yaml
+  - repoURL: https://github.com/smatula/rhtap-services-gitops
+    targetRevision: tpa
+    ref: values
   syncPolicy:
     managedNamespaceMetadata:
       labels:
