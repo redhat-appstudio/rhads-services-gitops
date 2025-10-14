@@ -5,7 +5,6 @@ commonAnnotations:
 configMapGenerator:
   - name: tpa-values-source
     namespace: tssc-tpa
-    behavior: replace
     literals:
       - APP_DOMAIN_URL=placeholder-app-domain-url.com
       - OIDC_ISSUER_URL=placeholder-oidc-issuer-url.com
