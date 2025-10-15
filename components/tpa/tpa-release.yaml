@@ -14,9 +14,9 @@ spec:
     helm:
       parameters:
         - name: appDomain
-          value: $(APP_DOMAIN_URL)
+          value: PLACEHOLDER_APP_DOMAIN
         - name: oidc.issuerUrl
-          value: $(OIDC_ISSUER_URL)
+          value: PLACEHOLDER_OIDC_ISSUER
       values: |
         replicas: 1
         openshift: &tpaOpenShift

@@ -9,7 +9,7 @@ metadata:
   namespace: tssc-keycloak
   name: keycloak
 spec:
-  host: $(KEYCLOAK_HOSTNAME)
+  host: KEYCLOAK_HOSTNAME_PLACEHOLDER
   to:
     kind: Service
     name: keycloak
@@ -77,7 +77,7 @@ spec:
       name: keycloak-pgsql-user
       key: password
   hostname:
-    hostname: $(KEYCLOAK_HOSTNAME)
+    hostname: KEYCLOAK_HOSTNAME_PLACEHOLDER
     strict: false
     strictBackchannel: false
   http:

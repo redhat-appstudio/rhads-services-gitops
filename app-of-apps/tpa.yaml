@@ -12,16 +12,6 @@ spec:
     repoURL: https://github.com/smatula/rhtap-services-gitops
     path: ./components/tpa
     targetRevision: tpa
-    kustomize:
-      parameters:
-        - name: KEYCLOAK_HOSTNAME
-          value: sso
-        - name: SEED_STRING
-          value: oyVHvG2cgySdlc5K
-        - name: APP_DOMAIN_URL
-          value: -tssc-tpa.apps.cluster-nlqdc.nlqdc.sandbox740.opentlc.com
-        - name: OIDC_ISSUER_URL
-          value: https://sso.apps.cluster-nlqdc.nlqdc.sandbox740.opentlc.com/realms/chicken
   syncPolicy:
     managedNamespaceMetadata:
       labels:
