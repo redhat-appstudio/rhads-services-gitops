@@ -9,12 +9,6 @@ oc new-project ${TPA_NAMESPACE}
 oc new-project rhbk-operator
 oc new-project tssc-keycloak
 
-# TPA - Grant Security Context Constraints (SCCs): Grant the non-root MinIO and PostgreSQL components the ability to run in the application namespaces.
-#oc adm policy add-scc-to-user anyuid -z default -n minio-operator
-#oc adm policy add-scc-to-user anyuid -z minio-operator -n minio-operator
-#oc adm policy add-scc-to-user anyuid -z default -n ${TPA_NAMESPACE}
-
-
 # Secret 1: TPA DB Connection Details 
 cat <<EOF | oc apply -f - -n $TPA_NAMESPACE
 apiVersion: v1
@@ -31,7 +25,7 @@ stringData:
   password: "$TPA_USER_DB_PASS"
 EOF
 
-# Secret 2: Keycload DB Connection Details
+# Secret 2: Keycloak DB Connection Details
 cat <<EOF | oc apply -f - -n $KEYCLOAK_NAMESPACE
 apiVersion: v1
 kind: Secret
@@ -57,6 +51,24 @@ metadata:
   labels:
     app: keycloak
   namespace: $TPA_NAMESPACE
+  name: tpa-realm-chicken-admin
+type: Opaque
+data:
+  username: $REALM_USER_B64
+  password: $REALM_ADMIN_PASS_B64
+EOF
+
+# Add Realm admin secret to KEYCLOAK namespace
+# Needed for placeholder substitution
+cat <<EOF | oc apply -f - -n $KEYCLOAK_NAMESPACE
+apiVersion: v1
+kind: Secret
+metadata:
+  annotations:
+    helm.sh/resource-policy: keep
+  labels:
+    app: keycloak
+  namespace: $KEYCLOAK_NAMESPACE
   name: tpa-realm-chicken-admin
 type: Opaque
 data:
@@ -96,19 +108,18 @@ metadata:
 type: Opaque
 stringData:
   bombastic_api_url: https://server$APP_DOMAIN_URL
-  oidc_issuer_url: https://sso.$INGRESS_URL/realms/chicken
+  oidc_issuer_url: https://sso.$INGRESS_URL/realms/$REALM
   oidc_client_id: cli
   oidc_client_secret: $PASS_CLI_B64
-  supported_cyclonedx_version: "1.4"
+  supported_cyclonedx_version: "${CYCLONEDX_VER}"
 EOF
 
-# TPA - Update parameters of TPA app-of-apps 
-yq -i '(.spec.sources[0].kustomize.parameters[] | select(.name == "KEYCLOAK_HOSTNAME").value) = env(KEYCLOAK_HOST)' app-of-apps/tpa.yaml
-yq -i '(.spec.sources[0].kustomize.parameters[] | select(.name == "SEED_STRING").value) = env(SEED_STRING)' app-of-apps/tpa.yaml
-yq -i '(.spec.sources[1].helm.parameters[] | select(.name == "appDomain").value) = env(APP_DOMAIN_URL)' app-of-apps/tpa.yaml
-yq -i '(.spec.sources[1].helm.parameters[] | select(.name == "oidc.issuerUrl").value) = env(OIDC_ISSUER_URL)' app-of-apps/tpa.yaml
+# TPA - Update literals of components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^APP_DOMAIN_URL="))) |= "APP_DOMAIN_URL=" + env(APP_DOMAIN_URL)' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^OIDC_ISSUER_URL="))) |= "OIDC_ISSUER_URL=" + env(OIDC_ISSUER_URL)' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^KEYCLOAK_HOSTNAME="))) |= "KEYCLOAK_HOSTNAME=" + env(KEYCLOAK_HOST)' ./components/tpa/kustomization.yaml
 
-echo "NOTE: Parameters updated in app-of-apps/tpa.yaml. Check in changes before running bootstrap.sh"
+echo "NOTE: Literals updated in components/tpa/kustomization.yaml. Check in and merge changes before running bootstrap.sh"
 
 # Create secrets
 #echo "Creating Pull Secret"

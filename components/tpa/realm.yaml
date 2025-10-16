@@ -1802,7 +1802,7 @@ spec:
         credentials:
           - type: password
             temporary: false
-            value: SEED_PLACEHOLDER
+            value: "${ADMIN_PASSWORD}"
         disableableCredentialTypes: []
         emailVerified: false
         enabled: true
@@ -1874,3 +1874,8 @@ spec:
     webAuthnPolicySignatureAlgorithms:
       - ES256
     webAuthnPolicyUserVerificationRequirement: not specified
+  placeholders:
+    ADMIN_PASSWORD:
+      secret:
+        name: tpa-realm-chicken-admin
+        key: password

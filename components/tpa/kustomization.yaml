@@ -6,10 +6,9 @@ configMapGenerator:
   - name: tpa-values-source
     namespace: tssc-tpa
     literals:
-      - APP_DOMAIN_URL=-tssc-tpa.apps.cluster-nlqdc.nlqdc.sandbox740.opentlc.com
-      - OIDC_ISSUER_URL=https://sso.apps.cluster-nlqdc.nlqdc.sandbox740.opentlc.com/realms/chicken
-      - KEYCLOAK_HOSTNAME=sso.apps.cluster-nlqdc.nlqdc.sandbox740.opentlc.com
-      - SEED_STRING=oyVHvG2cgySdlc5K
+      - APP_DOMAIN_URL=placeholder1
+      - OIDC_ISSUER_URL=placeholder2
+      - KEYCLOAK_HOSTNAME=placeholder3
 resources:
   - namespaces.yaml
   - subscription.yaml
@@ -33,16 +32,6 @@ replacements:
           name: keycloak
         fieldPaths:
           - spec.hostname.hostname
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.SEED_STRING
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.users.0.credentials.0.value
   - source:
       kind: ConfigMap
       name: tpa-values-source

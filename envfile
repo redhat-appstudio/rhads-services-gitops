@@ -10,8 +10,10 @@ export KEYCLOAK_NAMESPACE="tssc-keycloak"
 export INGRESS_URL=$(oc -n openshift-ingress-operator get ingresscontrollers.operator.openshift.io default -o jsonpath='{.status.domain}')
 export APP_DOMAIN_URL=-$TPA_NAMESPACE.$INGRESS_URL
 export KEYCLOAK_HOST="sso.$INGRESS_URL"
+export REALM="chicken"
 export REALM_USER_B64=$(echo -n "admin" | base64)
-export OIDC_ISSUER_URL="https://sso.$INGRESS_URL/realms/chicken"
+export OIDC_ISSUER_URL="https://sso.$INGRESS_URL/realms/$REALM"
+export CYCLONEDX_VER="1.4"
 
 # TPA - Set passwords
 export TPA_USER_DB_PASS=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 16)
