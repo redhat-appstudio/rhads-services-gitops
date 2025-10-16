@@ -15,8 +15,6 @@ spec:
       parameters:
         - name: appDomain
           value: PLACEHOLDER_APP_DOMAIN
-        - name: oidc.issuerUrl
-          value: PLACEHOLDER_OIDC_ISSUER
       values: |
         replicas: 1
         openshift: &tpaOpenShift
@@ -95,6 +93,7 @@ spec:
           enabled: false
 
         oidc: &tpaOIDC
+          issuerUrl: https://sso.apps.cluster-dpb2s.dpb2s.sandbox516.opentlc.com/realms/chicken
           clients:
             frontend:
               clientId: frontend
