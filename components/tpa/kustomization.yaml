@@ -6,9 +6,9 @@ configMapGenerator:
   - name: tpa-values-source
     namespace: tssc-tpa
     literals:
-      - APP_DOMAIN_URL=placeholder1
-      - OIDC_ISSUER_URL=placeholder2
-      - KEYCLOAK_HOSTNAME=placeholder3
+      - APP_DOMAIN_URL=-tssc-tpa.apps.cluster-dpb2s.dpb2s.sandbox516.opentlc.com
+      - OIDC_ISSUER_URL=https://sso.apps.cluster-dpb2s.dpb2s.sandbox516.opentlc.com/realms/chicken
+      - KEYCLOAK_HOSTNAME=sso.apps.cluster-dpb2s.dpb2s.sandbox516.opentlc.com
 resources:
   - namespaces.yaml
   - subscription.yaml
@@ -52,4 +52,3 @@ replacements:
           name: trusted-profile-analyzer
         fieldPaths:
           - spec.source.helm.parameters.1.value
-
