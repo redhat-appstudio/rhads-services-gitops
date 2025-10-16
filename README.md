@@ -7,7 +7,9 @@ This repo contains gitops definitions for services needed for testing RHTAP/TSSC
 Steps to deploy these services on new cluster:
 1. Edit `./envfile` - fill out the secrets needed.
 2. Run `./create_secrets.sh`. This will create the secrets on your cluster
-3. Run `./bootstrap.sh`. 
+3. NOTE: TPA ./create_secrets.sh Updates literals in kustomization.yaml
+	 Check in and merge changed files befor continueing.
+4. Run `./bootstrap.sh`. 
     * This script installs Opehsift Gitops and creates initial app-of-apps.
 
 ### Artifactory - After deployed on new cluster perform the following to setup.
@@ -76,6 +78,10 @@ username is `admin`,  The password can be found in the `/nexus-data/admin.passwo
 
 5. Go to the `Realms` under `Security` on the left navigation bar and click on `Docker Bearer Token Realm` and save the settings.
 
+### TPA - After deployement.
+
+1. Trustification Integration may be found in tssc-tpa namespace. 
+   Secret - tssc-trustification-integration
 
 ## Development
 
