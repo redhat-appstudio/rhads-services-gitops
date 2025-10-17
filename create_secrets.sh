@@ -71,9 +71,9 @@ metadata:
   namespace: $KEYCLOAK_NAMESPACE
   name: tpa-realm-chicken-admin
 type: Opaque
-data:
-  username: $REALM_USER_B64
-  password: $REALM_ADMIN_PASS_B64
+stringData:
+  username: admin
+  password: $SEED_STRING
 EOF
 
 # Secret 4: OIDC Client Secrets (oidc cli, manager, user)

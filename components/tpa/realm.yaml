@@ -1802,7 +1802,7 @@ spec:
         credentials:
           - type: password
             temporary: false
-            value: o4XtIMkNyCFYtIMV
+            value: "${ADMIN_PASSWORD}"
         disableableCredentialTypes: []
         emailVerified: false
         enabled: true
