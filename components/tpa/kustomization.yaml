@@ -45,7 +45,7 @@ replacements:
           kind: KeycloakRealmImport
           name: keycloak-chicken
         fieldPaths:
-          - spec.realm.clients[4].redirectUris[1]
+          - spec.realm.clients.4.redirectUris.1
   - source:
       kind: ConfigMap
       name: tpa-values-source
@@ -55,7 +55,7 @@ replacements:
           kind: KeycloakRealmImport
           name: keycloak-chicken
         fieldPaths:
-          - spec.realm.clients[4].redirectUris[2]
+          - spec.realm.clients.4.redirectUris.2
   - source:
       kind: ConfigMap
       name: tpa-values-source
@@ -65,7 +65,7 @@ replacements:
           kind: KeycloakRealmImport
           name: keycloak-chicken
         fieldPaths:
-          - spec.realm.clients[4].redirectUris[3]
+          - spec.realm.clients.4.redirectUris.3
   - source:
       kind: ConfigMap
       name: tpa-values-source
@@ -75,7 +75,7 @@ replacements:
           kind: KeycloakRealmImport
           name: keycloak-chicken
         fieldPaths:
-          - spec.realm.clients[4].redirectUris[4]
+          - spec.realm.clients.4.redirectUris.4
   - source:
       kind: ConfigMap
       name: tpa-values-source
