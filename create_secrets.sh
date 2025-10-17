@@ -71,7 +71,7 @@ metadata:
   namespace: $KEYCLOAK_NAMESPACE
   name: tpa-realm-chicken-admin
 type: Opaque
-stringData:
+data:
   username: $REALM_USER_B64
   password: $REALM_ADMIN_PASS_B64
 EOF
