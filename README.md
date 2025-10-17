@@ -9,7 +9,7 @@ Steps to deploy these services on new cluster:
 2. Run `./create_secrets.sh`. This will create the secrets on your cluster
 3. NOTE: TPA ./create_secrets.sh Updates literals in kustomization.yaml
 	 Check in and merge changed files befor continueing.
-4. Run `./bootstrap.sh`. 
+4. Run `./bootstrap.sh`.
     * This script installs Opehsift Gitops and creates initial app-of-apps.
 
 ### Artifactory - After deployed on new cluster perform the following to setup.
@@ -80,7 +80,7 @@ username is `admin`,  The password can be found in the `/nexus-data/admin.passwo
 
 ### TPA - After deployement.
 
-1. Trustification Integration may be found in tssc-tpa namespace. 
+1. Trustification Integration may be found in tssc-tpa namespace.
    Secret - tssc-trustification-integration
 
 ## Development

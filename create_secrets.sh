@@ -71,7 +71,7 @@ metadata:
   namespace: $KEYCLOAK_NAMESPACE
   name: tpa-realm-chicken-admin
 type: Opaque
-data:
+stringData:
   username: $REALM_USER_B64
   password: $REALM_ADMIN_PASS_B64
 EOF
@@ -118,6 +118,10 @@ EOF
 yq -i '(.configMapGenerator[].literals[] | select(test("^APP_DOMAIN_URL="))) |= "APP_DOMAIN_URL=" + env(APP_DOMAIN_URL)' ./components/tpa/kustomization.yaml
 yq -i '(.configMapGenerator[].literals[] | select(test("^OIDC_ISSUER_URL="))) |= "OIDC_ISSUER_URL=" + env(OIDC_ISSUER_URL)' ./components/tpa/kustomization.yaml
 yq -i '(.configMapGenerator[].literals[] | select(test("^KEYCLOAK_HOSTNAME="))) |= "KEYCLOAK_HOSTNAME=" + env(KEYCLOAK_HOST)' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^REDIRECT_URI1="))) |= "REDIRECT_URI1=https://server" + env(APP_DOMAIN_URL)' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^REDIRECT_URI2="))) |= "REDIRECT_URI2=https://server" + env(APP_DOMAIN_URL) + "/*"' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^REDIRECT_URI3="))) |= "REDIRECT_URI3=https://sbom" + env(APP_DOMAIN_URL)' ./components/tpa/kustomization.yaml
+yq -i '(.configMapGenerator[].literals[] | select(test("^REDIRECT_URI4="))) |= "REDIRECT_URI4=https://sbom" + env(APP_DOMAIN_URL) + "/*"' ./components/tpa/kustomization.yaml
 
 echo "NOTE: Literals updated in components/tpa/kustomization.yaml. Check in and merge changes before running bootstrap.sh"
 
