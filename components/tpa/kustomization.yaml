@@ -6,13 +6,13 @@ configMapGenerator:
   - name: tpa-values-source
     namespace: tssc-tpa
     literals:
-      - APP_DOMAIN_URL=-tssc-tpa.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com
-      - OIDC_ISSUER_URL=https://sso.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com/realms/chicken
-      - KEYCLOAK_HOSTNAME=sso.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com
-      - REDIRECT_URI1=https://server-tssc-tpa.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com
-      - REDIRECT_URI2=https://server-tssc-tpa.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com/*
-      - REDIRECT_URI3=https://sbom-tssc-tpa.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com
-      - REDIRECT_URI4=https://sbom-tssc-tpa.apps.cluster-t6h8v.t6h8v.sandbox2106.opentlc.com/*
+      - APP_DOMAIN_URL=-tssc-tpa.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com
+      - OIDC_ISSUER_URL=https://sso.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com/realms/chicken
+      - KEYCLOAK_HOSTNAME=sso.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com
+      - REDIRECT_URI1=https://server-tssc-tpa.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com
+      - REDIRECT_URI2=https://server-tssc-tpa.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com/*
+      - REDIRECT_URI3=https://sbom-tssc-tpa.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com
+      - REDIRECT_URI4=https://sbom-tssc-tpa.apps.cluster-9brwd.9brwd.sandbox610.opentlc.com/*
 resources:
   - namespaces.yaml
   - subscription.yaml
