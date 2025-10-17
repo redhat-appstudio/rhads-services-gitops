@@ -1,26 +1,20 @@
 ---
-apiVersion: project.openshift.io/v1
-kind: ProjectRequest
-description: rhbk-operator
-displayName: rhbk-operator
+apiVersion: v1
+kind: Namespace
 metadata:
   name: rhbk-operator
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 ---
-apiVersion: project.openshift.io/v1
-kind: ProjectRequest
-description: tssc-keycloak
-displayName: tssc-keycloak
+apiVersion: v1
+kind: Namespace
 metadata:
   name: tssc-keycloak
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 ---
-apiVersion: project.openshift.io/v1
-kind: ProjectRequest
-description: tssc-tpa
-displayName: tssc-tpa
+apiVersion: v1
+kind: Namespace
 metadata:
   name: tssc-tpa
   annotations:
