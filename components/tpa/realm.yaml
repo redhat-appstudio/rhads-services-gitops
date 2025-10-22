@@ -1107,7 +1107,7 @@ spec:
         bearerOnly: false
         clientAuthenticatorType: client-secret
         clientId: testing-manager
-        clientSecret: "${MANAGER_SECRET}"
+        secret: "${MANAGER_SECRET}"
         consentRequired: false
         defaultClientScopes:
           - web-origins
@@ -1179,7 +1179,7 @@ spec:
         bearerOnly: false
         clientAuthenticatorType: client-secret
         clientId: testing-user
-        clentSecret: "${USER_SECRET}"
+        secret: "${USER_SECRET}"
         consentRequired: false
         defaultClientScopes:
           - web-origins
@@ -1249,7 +1249,7 @@ spec:
         bearerOnly: false
         clientAuthenticatorType: client-secret
         clientId: cli
-        clientSecret: "${CLI_SECRET}"
+        secret: "${CLI_SECRET}"
         consentRequired: false
         defaultClientScopes:
           - web-origins
