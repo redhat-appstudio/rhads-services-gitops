@@ -13,10 +13,10 @@ configMapGenerator:
       - REDIRECT_URI2=https://server-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com/*
       - REDIRECT_URI3=https://sbom-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com
       - REDIRECT_URI4=https://sbom-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com/*
-      - SEED_STRING=placeholder
-      - CLI=placeholder
-      - USER=placeholder
-      - MANAGER=placeholder
+      - SEED_STRING=rlyNuHdZJxx98KYk
+      - CLI=OwRRrRdB-PIae-lVbS-yRL5-CvYozq2RY70C
+      - USER=0dsqgmg0-JDVH-CCGh-p1B8-5CYG2AKprwGH
+      - MANAGER=S3swRtlj-pZF3-b8E4-0zbf-A4LYMTSgEueA
 resources:
   - namespaces.yaml
   - subscription.yaml
