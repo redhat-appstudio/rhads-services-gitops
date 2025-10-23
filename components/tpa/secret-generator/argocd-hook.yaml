@@ -91,7 +91,7 @@ spec:
                 echo "  - Secrets already exist (skipped)"
                 echo "  - ConfigMap generated at build-time by exec plugin"
                 echo "  - Cluster domain: $INGRESS_DOMAIN"
-                exit 0
+                # exit 0
               fi
 
               echo "Some secrets missing - proceeding with full generation"
