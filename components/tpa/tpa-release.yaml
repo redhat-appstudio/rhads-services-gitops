@@ -6,17 +6,17 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "6"
 spec:
-  project: gitops-resources 
+  project: gitops-resources
   source:
     repoURL: https://charts.openshift.io/
     targetRevision: 1.1.1
     chart: redhat-trusted-profile-analyzer
     helm:
       parameters:
-        - name: appDomain
-          value: PLACEHOLDER_APP_DOMAIN
-        - name: oidc.issuerUrl
-          value: PLACEHOLDER_OIDC_ISSUER
+      - name: appDomain
+        value: PLACEHOLDER_APP_DOMAIN
+      - name: oidc.issuerUrl
+        value: PLACEHOLDER_OIDC_ISSUER
       values: |
         replicas: 1
         openshift: &tpaOpenShift
@@ -170,5 +170,4 @@ spec:
     server: https://kubernetes.default.svc
     namespace: tssc-tpa
   syncPolicy:
-    automated: { prune: true, selfHeal: true }
-
+    automated: {prune: true, selfHeal: true}

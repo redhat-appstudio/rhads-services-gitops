@@ -2,141 +2,123 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 commonAnnotations:
   argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
-configMapGenerator:
-  - name: tpa-values-source
-    namespace: tssc-tpa
-    literals:
-      - APP_DOMAIN_URL=-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com
-      - OIDC_ISSUER_URL=https://sso.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com/realms/chicken
-      - KEYCLOAK_HOSTNAME=sso.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com
-      - REDIRECT_URI1=https://server-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com
-      - REDIRECT_URI2=https://server-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com/*
-      - REDIRECT_URI3=https://sbom-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com
-      - REDIRECT_URI4=https://sbom-tssc-tpa.apps.cluster-zdz52.zdz52.sandbox5383.opentlc.com/*
-      - SEED_STRING=rlyNuHdZJxx98KYk
-      - CLI=OwRRrRdB-PIae-lVbS-yRL5-CvYozq2RY70C
-      - USER=0dsqgmg0-JDVH-CCGh-p1B8-5CYG2AKprwGH
-      - MANAGER=S3swRtlj-pZF3-b8E4-0zbf-A4LYMTSgEueA
+# ConfigMap is generated at build-time by exec plugin (see secret-generator/ConfigMapGenerator.sh)
+# Secrets are generated at runtime by ArgoCD Sync hook (see secret-generator/argocd-hook.yaml)
 resources:
   - namespaces.yaml
+  - secret-generator/rbac.yaml
+  - secret-generator/argocd-hook.yaml
   - subscription.yaml
   - infrastructure.yaml
   - keycloak-instance.yaml
   - realm.yaml
   - tpa-release.yaml
+generators:
+  - secret-generator/function-config.yaml
 replacements:
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.KEYCLOAK_HOSTNAME
-    targets:
-      - select:
-          kind: Route
-          name: keycloak
-        fieldPaths:
-          - spec.host
-      - select:
-          kind: Keycloak
-          name: keycloak
-        fieldPaths:
-          - spec.hostname.hostname
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.SEED_STRING
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.users.0.credentials.0.value
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.MANAGER
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.7.secret
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.USER
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.8.secret
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.CLI
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.9.secret
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.REDIRECT_URI1
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.4.redirectUris.1
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.REDIRECT_URI2
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.4.redirectUris.2
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.REDIRECT_URI3
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.4.redirectUris.3
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.REDIRECT_URI4
-    targets:
-      - select:
-          kind: KeycloakRealmImport
-          name: keycloak-chicken
-        fieldPaths:
-          - spec.realm.clients.4.redirectUris.4
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.APP_DOMAIN_URL
-    targets:
-      - select:
-          kind: Application
-          name: trusted-profile-analyzer
-        fieldPaths:
-          - spec.source.helm.parameters.0.value
-  - source:
-      kind: ConfigMap
-      name: tpa-values-source
-      fieldPath: data.OIDC_ISSUER_URL
-    targets:
-      - select:
-          kind: Application
-          name: trusted-profile-analyzer
-        fieldPaths:
-          - spec.source.helm.parameters.1.value
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.KEYCLOAK_HOSTNAME
+  targets:
+  - select:
+      kind: Route
+      name: keycloak
+    fieldPaths:
+    - spec.host
+  - select:
+      kind: Keycloak
+      name: keycloak
+    fieldPaths:
+    - spec.hostname.hostname
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI1
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.1
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI2
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.2
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI3
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.3
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI4
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.4
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.APP_DOMAIN_URL
+  targets:
+  - select:
+      kind: Application
+      name: trusted-profile-analyzer
+    fieldPaths:
+    - spec.source.helm.parameters.0.value
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.OIDC_ISSUER_URL
+  targets:
+  - select:
+      kind: Application
+      name: trusted-profile-analyzer
+    fieldPaths:
+    - spec.source.helm.parameters.1.value
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.cli
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPahts:
+    - spec.realm.clients.9.secret
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.testingManager
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPahts:
+    - spec.realm.clients.7.secret
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.testingUser
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPahts:
+    - spec.realm.clients.8.secret
+

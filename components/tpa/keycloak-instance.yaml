@@ -32,14 +32,14 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: https
-      protocol: TCP
-      port: 8443
-      targetPort: 8443
-    - name: http
-      protocol: TCP
-      port: 8080
-      targetPort: 8080
+  - name: https
+    protocol: TCP
+    port: 8443
+    targetPort: 8443
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
   selector:
     app: keycloak
     app.kubernetes.io/instance: keycloak
@@ -47,7 +47,7 @@ spec:
   sessionAffinity: None
   ipFamilyPolicy: SingleStack
   ipFamilies:
-    - IPv4
+  - IPv4
   internalTrafficPolicy: Cluster
 ---
 apiVersion: k8s.keycloak.org/v2alpha1
@@ -62,8 +62,8 @@ metadata:
 spec:
   instances: 1
   additionalOptions:
-    - name: enable-recovery
-      value: "true"
+  - name: enable-recovery
+    value: "true"
   transaction:
     xaEnabled: true
   db:

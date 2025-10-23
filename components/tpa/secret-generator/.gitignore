@@ -1,0 +1,2 @@
+# This directory uses ArgoCD Sync hooks to generate secrets dynamically
+# No local files should be generated

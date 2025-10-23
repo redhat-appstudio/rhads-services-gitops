@@ -33,6 +33,7 @@ spec:
   resourceTrackingMethod: annotation
   sourceNamespaces:
     - gitops-resources
+  kustomizeBuildOptions: --enable-alpha-plugins --enable-exec
 ' --type=merge
 }
 
