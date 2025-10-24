@@ -80,5 +80,5 @@ items:
     CLI: "${PASS_CLI}"
     MANAGER: "${PASS_MANAGER}"
     USER: "${PASS_USER}"
-    SEED: "${SEED_STRING}" 
+    SEED: "${SEED_STRING}"
 EOF
