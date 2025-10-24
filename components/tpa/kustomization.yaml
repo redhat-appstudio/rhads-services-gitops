@@ -91,44 +91,44 @@ replacements:
       name: trusted-profile-analyzer
     fieldPaths:
     - spec.source.helm.parameters.1.value
-#- source:
-#    kind: ConfigMap
-#    name: tpa-values-source
-#    fieldPath: data.cli
-#  targets:
-#  - select:
-#      kind: KeycloakRealmImport
-#      name: keycloak-chicken
-#    fieldPaths:
-#    - spec.realm.clients.9.secret
-#- source:
-#    kind: ConfigMap
-#    name: tpa-values-source
-#    fieldPath: data.testingManager
-#  targets:
-#  - select:
-#      kind: KeycloakRealmImport
-#      name: keycloak-chicken
-#    fieldPaths:
-#    - spec.realm.clients.7.secret
-#- source:
-#    kind: ConfigMap
-#    name: tpa-values-source
-#    fieldPath: data.testingUser
-#  targets:
-#  - select:
-#      kind: KeycloakRealmImport
-#      name: keycloak-chicken
-#    fieldPaths:
-#    - spec.realm.clients.8.secret
-#- source:
-#    kind: ConfigMap
-#    name: tpa-values-source
-#    fieldPath: data.SEED_STRING
-#  targets:
-#  - select:
-#      kind: KeycloakRealmImport
-#      name: keycloak-chicken
-#    fieldPaths:
-#    - spec.realm.users.0.credentials.0.value
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.cli
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.9.secret
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.testingManager
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.7.secret
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-clients
+    fieldPath: data.testingUser
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.8.secret
+- source:
+    kind: Secret
+    name: tpa-realm-chicken-admin
+    fieldPath: data.password
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.users.0.credentials.0.value
 
