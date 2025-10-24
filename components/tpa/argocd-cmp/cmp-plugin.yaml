@@ -31,15 +31,15 @@ data:
             OIDC_ISSUER_URL="https://sso.${INGRESS_DOMAIN}/realms/${REALM}"
 
             # Generate or reuse passwords
-            SEED_STRING=$( head -c 64 /dev/urandom | base64 --wrap=0 | tr -dc 'a-zA-Z0-9' | head -c 16)
-
-            random=$( head -c 64 /dev/urandom | base64 --wrap=0 | tr -dc 'a-zA-Z0-9' | head -c 32)
+            SEED_STRING="abcdefghijklmnop"
+            
+            random="cccccccccccccccccccccccccccccccc"
             PASS_CLI="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
 
-            random=$( head -c 64 /dev/urandom | base64 --wrap=0 | tr -dc 'a-zA-Z0-9' | head -c 32)
+            random="bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
             PASS_MANAGER="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
 
-            random=$( head -c 64 /dev/urandom | base64 --wrap=0 | tr -dc 'a-zA-Z0-9' | head -c 32)
+            random="aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             PASS_URSER="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
 
             # Create ConfigMap with cluster-specific values
