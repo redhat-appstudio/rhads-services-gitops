@@ -99,7 +99,7 @@ replacements:
   - select:
       kind: KeycloakRealmImport
       name: keycloak-chicken
-    fieldPahts:
+    fieldPaths:
     - spec.realm.clients.9.secret
 - source:
     kind: Secret
@@ -109,7 +109,7 @@ replacements:
   - select:
       kind: KeycloakRealmImport
       name: keycloak-chicken
-    fieldPahts:
+    fieldPaths:
     - spec.realm.clients.7.secret
 - source:
     kind: Secret
@@ -119,6 +119,6 @@ replacements:
   - select:
       kind: KeycloakRealmImport
       name: keycloak-chicken
-    fieldPahts:
+    fieldPaths:
     - spec.realm.clients.8.secret
 
