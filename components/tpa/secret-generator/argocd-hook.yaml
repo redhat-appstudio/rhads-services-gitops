@@ -135,22 +135,10 @@ spec:
               echo "Processing passwords..."
               TPA_USER_DB_PASS=$(get_or_generate_password "$TPA_NAMESPACE" "tpa-pgsql-user" "password" 16)
               KEYCLOAK_USER_DB_PASS=$(get_or_generate_password "$KEYCLOAK_NAMESPACE" "keycloak-pgsql-user" "password" 16)
-              SEED_STRING=$(oc get configmaps tpa-values-source -n tssc-tpa -o jsonpath="{.data.SEED}"  2>/dev/null || echo "")
-              if [ -z "$SEED_STRING" ]; then
-                SEED_STRING=$(get_or_generate_password "$TPA_NAMESPACE" "tpa-realm-chicken-admin" "password" 16)
-              fi
-              PASS_CLI=$(oc get configmaps tpa-values-source -n tssc-tpa -o jsonpath="{.data.CLI}"  2>/dev/null || echo "")
-              if [ -z "$PASS_CLI" ]; then
-                PASS_CLI=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "cli")
-              fi
-              PASS_MANAGER=$(oc get configmaps tpa-values-source -n tssc-tpa -o jsonpath="{.data.MANAGER}"  2>/dev/null || echo "")
-              if [ -z "$PASS_MANAGER" ]; then
-                PASS_MANAGER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingManager")
-              fi
-              PASS_USER=$(oc get configmaps tpa-values-source -n tssc-tpa -o jsonpath="{.data.USER}"  2>/dev/null || echo "")
-              if [ -z "$PASS_USER" ]; then
-                PASS_USER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingUser")
-              fi
+              SEED_STRING=$(get_or_generate_password "$TPA_NAMESPACE" "tpa-realm-chicken-admin" "password" 16)
+              PASS_CLI=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "cli")
+              PASS_MANAGER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingManager")
+              PASS_USER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingUser")
               echo ""
 
               # Create all secrets
