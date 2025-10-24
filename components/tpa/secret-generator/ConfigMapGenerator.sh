@@ -45,19 +45,11 @@ get_or_generate_uuid_password() {
   fi
 }
 
-## Generate or reuse passwords
+# Generate or reuse passwords
 SEED_STRING=$(get_or_generate_password "$TPA_NAMESPACE" "tpa-realm-chicken-admin" "password" 16)
 PASS_CLI=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "cli")
 PASS_MANAGER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingManager")
 PASS_USER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingUser")
-
-#SEED_STRING=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 16)
-#random=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-#PASS_CLI="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
-#random=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-#PASS_MANAGER="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
-#random=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-#PASS_USER="${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
 
 # Output KRM ResourceList with ConfigMap
 cat <<EOF
