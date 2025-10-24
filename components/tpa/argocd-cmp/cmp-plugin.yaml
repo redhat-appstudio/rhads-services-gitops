@@ -30,12 +30,6 @@ data:
             KEYCLOAK_HOST="sso.${INGRESS_DOMAIN}"
             OIDC_ISSUER_URL="https://sso.${INGRESS_DOMAIN}/realms/${REALM}"
 
-            # Generate or reuse passwords
-            SEED_STRING="1234567890123456"
-            PASS_CLI="12345678901234561234567890123456"
-            PASS_MANAGER="12345678901234561234567890123456"
-            PASS_USER="12345678901234561234567890123456"
-
             # Create ConfigMap with cluster-specific values
             cat > generated-configmap.yaml <<EOF
             apiVersion: v1
