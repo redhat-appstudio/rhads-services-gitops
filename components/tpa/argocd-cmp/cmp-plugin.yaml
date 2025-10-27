@@ -49,6 +49,65 @@ data:
               REDIRECT_URI4: "https://sbom${APP_DOMAIN_URL}/*"
             EOF
 
+            # Function to get existing secret or generate new
+            get_or_generate_password() {
+              local namespace=$1
+              local name=$2
+              local key=$3
+              local length=${4:-16}
+
+              existing=$(oc get secret "$name" -n "$namespace" -o jsonpath="{.data.$key}" 2>/dev/null | base64 -d || echo "")
+              if [ -n "$existing" ]; then
+                echo "$existing"
+              else
+                openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c "$length"
+              fi
+            }
+
+            get_or_generate_uuid_password() {
+              local namespace=$1
+              local name=$2
+              local key=$3
+
+              existing=$(oc get secret "$name" -n "$namespace" -o jsonpath="{.data.$key}" 2>/dev/null | base64 -d || echo "")
+              if [ -n "$existing" ]; then
+                echo "$existing"
+              else
+                random=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
+                echo "${random:0:8}-${random:8:4}-${random:12:4}-${random:16:4}-${random:20:12}"
+              fi
+            }
+
+            # Generate or reuse passwords
+            SEED_STRING=$(get_or_generate_password "$TPA_NAMESPACE" "tpa-realm-chicken-admin" "password" 16)
+            PASS_CLI=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "cli")
+            PASS_MANAGER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingManager")
+            PASS_USER=$(get_or_generate_uuid_password "$TPA_NAMESPACE" "tpa-realm-chicken-clients" "testingUser")
+ 
+            #SEED_STRING="1234567890123456"
+            #PASS_CLI="12345678901234561234567890123456"
+            #PASS_MANAGER="12345678901234561234567890123456"
+            #PASS_USER="12345678901234561234567890123456"
+
+            cat > generated-secret.yaml <<EOF
+            ---
+            apiVersion: v1
+            kind: Secret
+            metadata:
+              annotations:
+                helm.sh/resource-policy: keep
+              labels:
+                app: keycloak
+              namespace: $TPA_NAMESPACE
+              name: tpa-realm-clients
+            type: Opaque
+            stringData:
+              cli: "$PASS_CLI"
+              testingManager: "$PASS_MANAGER"
+              testingUser: "$PASS_USER"
+              password: "$SEED_STRING"
+            EOF
+
             # Modify kustomization.yaml to include generated ConfigMap
             # Remove generators section and add ConfigMap as resource
             if grep -q "^generators:" kustomization.yaml; then
@@ -62,7 +121,14 @@ data:
               mv kustomization.yaml.tmp kustomization.yaml
             fi
 
+            # Add generated Secret to resources if not already there
+            if ! grep -q "generated-secret.yaml" kustomization.yaml; then
+              sed '/^resources:/a\  - generated-secret.yaml' kustomization.yaml > kustomization.yaml.tmp
+              mv kustomization.yaml.tmp kustomization.yaml
+            fi
+
             # Run kustomize build
             kustomize build .
       discover:
         fileName: "kustomization.yaml"
+
