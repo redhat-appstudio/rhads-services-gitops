@@ -93,7 +93,7 @@ replacements:
     - spec.source.helm.parameters.1.value
 - source:
     kind: Secret
-    name: tpa-realm-chicken-clients
+    name: tpa-realm-clients
     fieldPath: data.cli
   targets:
   - select:
@@ -103,7 +103,7 @@ replacements:
     - spec.realm.clients.9.secret
 - source:
     kind: Secret
-    name: tpa-realm-chicken-clients
+    name: tpa-realm-clients
     fieldPath: data.testingManager
   targets:
   - select:
@@ -113,7 +113,7 @@ replacements:
     - spec.realm.clients.7.secret
 - source:
     kind: Secret
-    name: tpa-realm-chicken-clients
+    name: tpa-realm-clients
     fieldPath: data.testingUser
   targets:
   - select:
@@ -123,7 +123,7 @@ replacements:
     - spec.realm.clients.8.secret
 - source:
     kind: Secret
-    name: tpa-realm-checken-admin
+    name: tpa-realm-clients
     fieldPath: data.password
   targets:
   - select:
