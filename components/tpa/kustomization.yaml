@@ -92,9 +92,9 @@ replacements:
     fieldPaths:
     - spec.source.helm.parameters.1.value
 - source:
-    kind: Secret
-    name: tpa-realm-clients
-    fieldPath: data.cli
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.CLI
   targets:
   - select:
       kind: KeycloakRealmImport
@@ -102,9 +102,9 @@ replacements:
     fieldPaths:
     - spec.realm.clients.9.secret
 - source:
-    kind: Secret
-    name: tpa-realm-clients
-    fieldPath: data.testingManager
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.MANAGER
   targets:
   - select:
       kind: KeycloakRealmImport
@@ -112,9 +112,9 @@ replacements:
     fieldPaths:
     - spec.realm.clients.7.secret
 - source:
-    kind: Secret
-    name: tpa-realm-clients
-    fieldPath: data.testingUser
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.USER
   targets:
   - select:
       kind: KeycloakRealmImport
@@ -122,9 +122,9 @@ replacements:
     fieldPaths:
     - spec.realm.clients.8.secret
 - source:
-    kind: Secret
-    name: tpa-realm-clients
-    fieldPath: data.password
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.SEED_STRING
   targets:
   - select:
       kind: KeycloakRealmImport

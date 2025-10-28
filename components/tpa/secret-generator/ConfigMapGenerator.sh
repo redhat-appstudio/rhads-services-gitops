@@ -93,19 +93,8 @@ items:
     REDIRECT_URI2: "https://server${APP_DOMAIN_URL}/*"
     REDIRECT_URI3: "https://sbom${APP_DOMAIN_URL}"
     REDIRECT_URI4: "https://sbom${APP_DOMAIN_URL}/*"
-- apiVersion: v1
-  kind: Secret
-  metadata:
-    annotations:
-      helm.sh/resource-policy: keep
-    labels:
-      app: keycloak
-    namespace: $TPA_NAMESPACE
-    name: tpa-realm-clients
-  type: Opaque
-  stringData:
-    cli: "$PASS_CLI"
-    testingManager: "$PASS_MANAGER"
-    testingUser: "$PASS_USER"
-    password: "$SEED_STRING"
+    SEED_STRING: "${SEED_STRING}"
+    CLI: "${PASS_CLI}"
+    USER: "${PASS_USER}"
+    MANAGER: "${PASS_MANAGER}"
 EOF
