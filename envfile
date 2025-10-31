@@ -2,38 +2,9 @@
 ## Obtain from https://console.redhat.com/openshift
 ## Mandatory
 # export PULL_SECRET='{"auths":{"cloud.openshift.com":{"auth":"=","email":"my@email.com"},"quay.io":{"auth":"=","email":"my@email.com"},"registry.connect.redhat.com":{"auth":"","email":"my@email.com"},"registry.redhat.io":{"auth":"","email":"my@email.com"}}}'
-export PULL_SECRET=
+#export PULL_SECRET=
 
 # rhtap-services AWS
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
-
-# TPA
-export TPA_NAMESPACE="tssc-tpa"
-export KEYCLOAK_NAMESPACE="tssc-keycloak"
-export INGRESS_URL=$(oc -n openshift-ingress-operator get ingresscontrollers.operator.openshift.io default -o jsonpath='{.status.domain}')
-export APP_DOMAIN_URL=-$TPA_NAMESPACE.$INGRESS_URL
-export KEYCLOAK_HOST="sso.$INGRESS_URL"
-export REALM="chicken"
-export REALM_USER_B64=$(echo -n "admin" | base64)
-export OIDC_ISSUER_URL="https://sso.$INGRESS_URL/realms/$REALM"
-export CYCLONEDX_VER="1.4"
-
-# TPA - Set passwords
-export TPA_USER_DB_PASS=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 16)
-export KEYCLOAK_USER_DB_PASS=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 16)
-export SEED_STRING=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 16)
-export REALM_ADMIN_PASS_B64=$(echo -n $SEED_STRING | base64)
-
-PC=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-PM=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-PU=$(openssl rand -base64 64 | tr -dc 'a-zA-Z0-9' | head -c 32)
-
-export PASS_CLI="${PC:0:8}-${PC:8:4}-${PC:12:4}-${PC:16:4}-${PC:20:12}"
-export PASS_MANAGER="${PM:0:8}-${PM:8:4}-${PM:12:4}-${PM:16:4}-${PM:20:12}"
-export PASS_USER="${PU:0:8}-${PU:8:4}-${PU:12:4}-${PU:16:4}-${PU:20:12}"
-
-export PASS_CLI_B64=$(echo -n $PASS_CLI | base64)
-export PASS_MANAGER_B64=$(echo -n $PASS_MANAGER | base64)
-export PASS_USER_B64=$(echo -n $PASS_USER | base64)
 

@@ -1,0 +1,68 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tpa-cmp-plugin
+  namespace: openshift-gitops
+data:
+  plugin.yaml: |
+    apiVersion: argoproj.io/v1alpha1
+    kind: ConfigManagementPlugin
+    metadata:
+      name: tpa-kustomize
+    spec:
+      init:
+        command: [sh, -c, 'echo "TPA CMP Plugin initialized"']
+      generate:
+        command: [sh, -c]
+        args:
+          - |
+            set -e
+
+            # Get cluster ingress domain
+            INGRESS_DOMAIN=$(oc -n openshift-ingress-operator get ingresscontrollers.operator.openshift.io default -o jsonpath='{.status.domain}' 2>/dev/null || echo "apps.example.com")
+
+            # Set namespace variables
+            TPA_NAMESPACE="tssc-tpa"
+            REALM="chicken"
+
+            # Derive values
+            APP_DOMAIN_URL="-${TPA_NAMESPACE}.${INGRESS_DOMAIN}"
+            KEYCLOAK_HOST="sso.${INGRESS_DOMAIN}"
+            OIDC_ISSUER_URL="https://sso.${INGRESS_DOMAIN}/realms/${REALM}"
+
+            # Create ConfigMap with cluster-specific values
+            cat > generated-configmap.yaml <<EOF
+            apiVersion: v1
+            kind: ConfigMap
+            metadata:
+              name: tpa-values-source
+              namespace: ${TPA_NAMESPACE}
+              annotations:
+                argocd.argoproj.io/sync-options: Prune=false
+            data:
+              APP_DOMAIN_URL: "${APP_DOMAIN_URL}"
+              OIDC_ISSUER_URL: "${OIDC_ISSUER_URL}"
+              KEYCLOAK_HOSTNAME: "${KEYCLOAK_HOST}"
+              REDIRECT_URI1: "https://server${APP_DOMAIN_URL}"
+              REDIRECT_URI2: "https://server${APP_DOMAIN_URL}/*"
+              REDIRECT_URI3: "https://sbom${APP_DOMAIN_URL}"
+              REDIRECT_URI4: "https://sbom${APP_DOMAIN_URL}/*"
+            EOF
+
+            # Modify kustomization.yaml to include generated ConfigMap
+            # Remove generators section and add ConfigMap as resource
+            if grep -q "^generators:" kustomization.yaml; then
+              sed '/^generators:/,/^[^ ]/{/^generators:/d; /^  -/d;}' kustomization.yaml > kustomization.yaml.tmp
+              mv kustomization.yaml.tmp kustomization.yaml
+            fi
+
+            # Add generated ConfigMap to resources if not already there
+            if ! grep -q "generated-configmap.yaml" kustomization.yaml; then
+              sed '/^resources:/a\  - generated-configmap.yaml' kustomization.yaml > kustomization.yaml.tmp
+              mv kustomization.yaml.tmp kustomization.yaml
+            fi
+
+            # Run kustomize build
+            kustomize build .
+      discover:
+        fileName: "kustomization.yaml"
