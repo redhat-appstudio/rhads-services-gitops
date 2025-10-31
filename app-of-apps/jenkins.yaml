@@ -14,7 +14,7 @@ spec:
       path: "components/jenkins"
     - repoURL: https://charts.jenkins.io
       chart: jenkins
-      targetRevision: 5.8.73 # Use a specific chart version
+      targetRevision: 5.8.104 # Use a specific chart version
       helm:
         releaseName: jenkins
         valueFiles:

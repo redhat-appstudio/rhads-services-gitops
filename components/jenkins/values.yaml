@@ -19,22 +19,42 @@ controller:
   # -- Custom Pod labels (an object with `label-key: label-value` pairs)
   podLabels:
     tssc-jenkins-agent: true
+  # -- Additional Java options for Jenkins controller
+  javaOpts: >-
+    -Dhudson.model.User.allowNonExistentUserToLogin=false
+  # Enable OpenShift OAuth
+  containerEnv:
+    - name: OPENSHIFT_ENABLE_OAUTH
+      value: "true"
+    - name: OPENSHIFT_PERMISSIONS_POLL_INTERVAL
+      value: "300000"
   JCasC:
-    defaultConfig: true
+    defaultConfig: false
     configScripts:
-      jenkins-system: |
+      jenkins-config: |
         jenkins:
-          systemMessage: "Jenkins configured with Configuration as Code for RHTAP on OpenShift"
-          securityRealm:
-            local:
-              allowsSignup: false
-              users:
-                - id: "admin"
-                  name: "Jenkins Admin"
-                  password: "${chart-admin-password}"
           authorizationStrategy:
-            loggedInUsersCanDoAnything:
-              allowAnonymousRead: false
+            globalMatrix:
+              entries:
+                - group:
+                    name: "authenticated"
+                    permissions:
+                      - "Overall/Read"
+          disableRememberMe: true
+          mode: NORMAL
+          numExecutors: 0
+          labelString: ""
+          markupFormatter:
+            plainText
+          slaveAgentPort: 50000
+          crumbIssuer:
+            standard:
+              excludeClientIPFromCrumb: true
+        security:
+          apiToken:
+            creationOfLegacyTokenEnabled: false
+            tokenGenerationOnCreationEnabled: false
+            usageStatisticsEnabled: true
   serviceType: ClusterIP
   servicePort: 8080
   # OpenShift 4.18 uses restricted-v2 SCC by default. To allow the init container to write to the
@@ -45,8 +65,6 @@ controller:
     fsGroup: 1000
   containerSecurityContext: {}
   installPlugins:
-    - openshift-client
-    - openshift-login
     - gitlab-plugin
     - github
     - bitbucket
@@ -55,6 +73,8 @@ controller:
     - git
     - configuration-as-code
     - job-dsl:latest
+    - matrix-auth
+    - openshift-login
   # Openshift route
   route:
     # -- Enables openshift route
@@ -79,6 +99,8 @@ rbac:
   serviceAccount:
     create: true
     name: "jenkins"
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
 
 agent:
   # -- Enable Kubernetes plugin jnlp-agent podTemplate
@@ -118,65 +140,35 @@ agent:
         label: tssc-jenkins-agent
         serviceAccount: jenkins
         namespace: jenkins
-        idleMinutes: 0
+        idleMinutes: 4
         podRetention: Never
         nodeUsageMode: NORMAL
-        yaml: |
-          spec:
-            initContainers:
-            - name: agent-injector
-              image: jenkins/inbound-agent:3341.v0766d82b_dec0-1
-              command:
-              - sh
-              - -c
-              - |
-                mkdir -p /agent-volume/usr/share/jenkins
-                cp /usr/share/jenkins/agent.jar /agent-volume/usr/share/jenkins/agent.jar
-                mkdir -p /workspace/agent
-              volumeMounts:
-              - name: agent-volume
-                mountPath: /agent-volume
-              - name: workspace-volume
-                mountPath: /workspace
-            containers:
-            - name: jnlp
-              image: quay.io/rhtap/tssc-jenkins-agent:latest
-              command:
-              - sh
-              - -c
-              - java -jar /usr/share/jenkins/agent.jar -url $JENKINS_URL -tunnel $JENKINS_TUNNEL -workDir /workspace/agent $JENKINS_SECRET $JENKINS_AGENT_NAME
-              env:
-              - name: JENKINS_URL
-                value: http://jenkins.jenkins.svc.cluster.local:8080/
-              - name: JENKINS_TUNNEL
-                value: jenkins-agent.jenkins.svc.cluster.local:50000
-              - name: _BUILDAH_STARTED_IN_USERNS
-                value: ""
-              - name: BUILDAH_ISOLATION
-                value: chroot
-              - name: STORAGE_DRIVER
-                value: vfs
-              imagePullPolicy: Always
-              resources:
-                requests:
-                  cpu: 100m
-                  memory: 256Mi
-                limits:
-                  cpu: 500m
-                  memory: 1Gi
-              workingDir: /workspace/agent
-              volumeMounts:
-              - name: workspace-volume
-                mountPath: /workspace
-              - name: agent-volume
-                mountPath: /usr/share/jenkins
-                subPath: usr/share/jenkins
-              - name: buildah-storage
-                mountPath: /home/jenkins/.local/share/containers
-            volumes:
-            - name: workspace-volume
-              emptyDir: {}
-            - name: agent-volume
-              emptyDir: {}
-            - name: buildah-storage
-              emptyDir: {}
+        agentInjection: true
+        containers:
+          - name: jnlp
+            image: quay.io/rhtap/tssc-jenkins-agent:latest
+            args: '$(JENKINS_SECRET) $(JENKINS_NAME)'
+            ttyEnabled: false
+            privileged: false
+            alwaysPullImage: true
+            resourceRequestCpu: "100m"
+            resourceRequestMemory: "256Mi"
+            resourceLimitCpu: "500m"
+            resourceLimitMemory: "1024Mi"
+            workingDir: "/home/jenkins/agent"
+            envVars:
+              - envVar:
+                  key: JENKINS_URL
+                  value: "http://jenkins.jenkins.svc.cluster.local:8080/"
+              - envVar:
+                  key: JENKINS_TUNNEL
+                  value: "jenkins-agent.jenkins.svc.cluster.local:50000"
+              - envVar:
+                  key: _BUILDAH_STARTED_IN_USERNS
+                  value: ""
+              - envVar:
+                  key: BUILDAH_ISOLATION
+                  value: "chroot"
+              - envVar:
+                  key: STORAGE_DRIVER
+                  value: "vfs"

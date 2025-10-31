@@ -10,7 +10,7 @@ spec:
   project: gitops-resources
   source:
     path: ./app-of-apps
-    repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
+    repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops.git
     targetRevision: main
   syncPolicy:
     automated:

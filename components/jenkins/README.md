@@ -5,8 +5,9 @@ Jenkins installation for TSSC (Trusted Software Supply Chain) with custom build 
 ## Overview
 
 This deployment provides:
-- **Jenkins Controller**: Helm chart-based Jenkins installation (v5.8.73)
+- **Jenkins Controller**: Helm chart-based Jenkins installation
 - **Custom Build Agent**: UBI9-based agent with buildah, syft, cosign, and Python 3.11
+- **Authentication**: OpenShift OAuth (no username/password)
 - **Security**: OpenShift restricted-v2 SCC with custom SCC for buildah capabilities
 - **GitOps**: ArgoCD-managed deployment
 
@@ -23,7 +24,7 @@ This deployment provides:
                       ▼
 ┌─────────────────────────────────────────────────────┐
 │ Jenkins Build Agent (Pod Template)                  │
-│ - Image: quay.io/quay_xjiang/tssc-agent:latest     │
+│ - Image: quay.io/rhtap/tssc-jenkins-agent:latest       │
 │ - Python 3.11 (for hashlib.file_digest)            │
 │ - Buildah (rootless, chroot isolation, vfs)        │
 │ - Tools: syft, cosign, ec, jq, yq, git-lfs         │
@@ -80,55 +81,85 @@ kubectl get pods -n jenkins
 kubectl get route jenkins -n jenkins -o jsonpath='{.spec.host}'
 ```
 
-## Usage
+## Configuration Details
 
-### Using the Agent in Jenkinsfile
+### Authentication and Security
 
-To use the custom TSSC agent in your pipeline, reference the agent label in your Jenkinsfile:
+**OpenShift OAuth Integration:**
+- Jenkins uses OpenShift OAuth for authentication (via `openshift-login` plugin)
+- Users authenticate with OpenShift cluster credentials
+- No separate Jenkins admin password required
+- ServiceAccount-based OAuth with Route redirect URL resolution
 
-```groovy
-pipeline {
-    agent {
-        label 'tssc-jenkins-agent'  // Uses the custom TSSC agent pod template
-    }
+**Security Settings:**
+- `disableRememberMe: true` - Ensures sessions expire with OAuth tokens
+- `excludeClientIPFromCrumb: true` - CSRF protection compatible with proxies/load balancers
+- `GlobalMatrixAuthorizationStrategy` - Required by openshift-login plugin
 
-    stages {
-        stage('Build Container') {
-            steps {
-                script {
-                    // Example: Build container image with buildah
-                    sh '''
-                        buildah bud -t myapp:latest .
-                        buildah push myapp:latest docker://registry.example.com/myapp:latest
-                    '''
-                }
-            }
-        }
-
-        stage('Generate SBOM') {
-            steps {
-                script {
-                    // Example: Generate SBOM with syft
-                    sh 'syft packages docker://myapp:latest -o json > sbom.json'
-                }
-            }
-        }
-
-        stage('Sign Image') {
-            steps {
-                script {
-                    // Example: Sign image with cosign
-                    sh 'cosign sign --key k8s://namespace/secret registry.example.com/myapp:latest'
-                }
-            }
-        }
-    }
-}
+**Environment Variables:**
+```yaml
+OPENSHIFT_ENABLE_OAUTH: "true"
+OPENSHIFT_PERMISSIONS_POLL_INTERVAL: "300000"  # Poll every 5 minutes
 ```
 
-**Note**: The agent label `tssc-jenkins-agent` is defined in the pod template configuration in `values.yaml`. See [agent/Dockerfile](agent/Dockerfile) for the complete list of tools available in the agent.
+**JCasC (Jenkins Configuration as Code):**
 
-## Configuration Details
+The OAuth integration is configured via JCasC in `values.yaml`:
+
+```yaml
+JCasC:
+  defaultConfig: false
+  configScripts:
+    jenkins-config: |
+      jenkins:
+        authorizationStrategy:
+          globalMatrix:
+            entries:
+              - group:
+                  name: "authenticated"
+                  permissions:
+                    - "Overall/Read"
+        disableRememberMe: true
+        crumbIssuer:
+          standard:
+            excludeClientIPFromCrumb: true
+      security:
+        apiToken:
+          creationOfLegacyTokenEnabled: false
+          tokenGenerationOnCreationEnabled: false
+```
+
+Key settings:
+- `authorizationStrategy: globalMatrix` - Required by openshift-login plugin
+- `authenticated` group with `Overall/Read` permission - Allows OAuth users to access Jenkins
+- `disableRememberMe: true` - Ensures sessions expire with OAuth tokens
+- `excludeClientIPFromCrumb: true` - CSRF protection compatible with proxies/load balancers
+- API token settings - Controls token creation behavior
+
+**RBAC Configuration:**
+
+ServiceAccount with OAuth redirect annotation in `values.yaml`:
+
+```yaml
+rbac:
+  create: true
+  useOpenShiftNonRootSCC: true
+  serviceAccount:
+    create: true
+    name: "jenkins"
+    annotations:
+      serviceaccounts.openshift.io/oauth-redirectreference.jenkins:
+        '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
+```
+
+The OAuth redirect annotation is **critical** - it enables dynamic Route-based redirect URL resolution without requiring a separate OAuthClient resource.
+
+**Required Plugins:**
+
+Essential plugins for OAuth integration (from `values.yaml`):
+- `openshift-login` - OpenShift OAuth authentication provider
+- `matrix-auth` - Provides GlobalMatrixAuthorizationStrategy
+- `configuration-as-code` - JCasC functionality
 
 ### Buildah Rootless Configuration
 
@@ -177,7 +208,7 @@ The `tssc` pod template includes:
 - Mounts to `/agent-volume` for main container
 
 **Main Container (jnlp):**
-- Image: `quay.io/quay_xjiang/tssc-agent:latest`
+- Image: `quay.io/rhtap/tssc-jenkins-agent:latest`
 - Resources: 256Mi-1Gi memory, 100m-500m CPU
 - Volumes: workspace, agent JAR, buildah storage (emptyDir)
 

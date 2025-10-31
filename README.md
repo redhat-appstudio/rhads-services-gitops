@@ -65,37 +65,50 @@ $ podman push --authfile <auth.json> <registry hostname>/rhtap/mysql:latest
 $ echo "https://$(kubectl -n jenkins get route jenkins -o jsonpath='{.spec.host}')"
 ```
 
-2. Get admin password
-The default username is `admin`. Retrieve the password:
-```bash
-$ kubectl -n jenkins get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d
-```
+2. Authentication via OpenShift OAuth
 
-3. Create API token for admin user
-   - Log in to Jenkins console with admin credentials
-   - Click on your username (admin) in the upper right corner
-   - Click on your username link again to go to your user page
-   - Click `Security` from the left sidebar menu
-   - In the `API Token` section, click `Add new token` button
-   - Enter a token name in the dialog (e.g., "TSSC-Pipeline-Token")
-   - Click `Generate` button
-   - **Important**: A dialog will display the token with message "Copy this token now, because it cannot be recovered in the future."
-   - Copy the token value (use the copy button next to the token)
-   - Click `Done` to close the dialog
+Jenkins uses OpenShift OAuth for authentication. Users authenticate with their OpenShift cluster credentials.
 
-   Alternative method via REST API:
+
+**Note:** There is no separate Jenkins admin password. Authentication is managed entirely through OpenShift.
+
+3. API Token Creation for Automation
+
+With OpenShift OAuth authentication, traditional Jenkins API tokens work differently:
+
+**Option 1: Use Jenkins API Token (After OAuth Login)**
+   - Access Jenkins console via OpenShift OAuth
+   - Click on your username in the upper right corner
+   - Click `Configure` or your username link
+   - Scroll to `API Token` section
+   - Click `Add new Token`
+   - Enter a token name (e.g., "CI-CD-Pipeline-Token")
+   - Click `Generate` and copy the token immediately
+   - **Important:** Save the token securely - it cannot be recovered
+
+**Option 2: Use OpenShift ServiceAccount Token (Recommended for CI/CD)**
    ```bash
-   # Generate token via API
-   curl -X POST "https://$(kubectl -n jenkins get route jenkins -o jsonpath='{.spec.host}')/user/admin/descriptorByName/jenkins.security.ApiTokenProperty/generateNewToken" \
-     --user admin:$(kubectl -n jenkins get secret jenkins -o jsonpath='{.data.jenkins-admin-password}' | base64 -d) \
-     --data 'newTokenName=TSSC-Pipeline-Token'
+   # Create a ServiceAccount for Jenkins automation
+   kubectl create sa jenkins-automation -n jenkins
+
+   # Grant necessary permissions (adjust role as needed)
+   kubectl create rolebinding jenkins-automation-admin \
+     --clusterrole=admin \
+     --serviceaccount=jenkins:jenkins-automation \
+     -n jenkins
+
+   # Generate token
+   kubectl create token jenkins-automation -n jenkins --duration=8760h
    ```
 
-4. (Optional) Verify agent configuration
-```bash
-# Check if pod template is configured correctly
-$ kubectl -n jenkins get configmap jenkins-jenkins-jcasc-config -o yaml | grep -A 20 "podTemplates:"
-```
+   Use this token with the Jenkins API by including it in the Authorization header:
+   ```bash
+   curl -H "Authorization: Bearer <token>" https://<jenkins-url>/api/json
+   ```
+
+4. Using the TSSC Jenkins Agent
+
+For details on using the TSSC Jenkins Agent, see [components/jenkins/README.md](components/jenkins/README.md#usage).
 
 ### Nexus - After deployed on new cluster perform the following to setup.
 

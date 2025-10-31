@@ -185,6 +185,10 @@ RUN echo "=== Verifying binary locations ===" && \
     which python3 && \
     echo "=== All binary locations verified ==="
 
+# Copy jenkins-agent entrypoint script
+COPY jenkins-agent /usr/local/bin/jenkins-agent
+RUN chmod +x /usr/local/bin/jenkins-agent
+
 # Switch to jenkins user
 USER ${user}
 
@@ -214,6 +218,6 @@ LABEL \
     org.label-schema.vendor="Custom Jenkins Agent" \
     org.label-schema.schema-version="1.0"
 
-# For agent injection, the container needs to stay running
-# Jenkins will inject the agent process into this container
-CMD ["sleep", "infinity"]
+# Use the official Jenkins agent entrypoint script
+# This allows using args: ['$(JENKINS_SECRET)', '$(JENKINS_NAME)'] in pod templates
+ENTRYPOINT ["/usr/local/bin/jenkins-agent"]
