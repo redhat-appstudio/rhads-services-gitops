@@ -1,0 +1,10 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ConfigManagementPlugin
+metadata:
+  name: tpa-kustomize-plugin
+spec:
+  version: v1.0
+  generate:
+    command: ["/usr/local/bin/tpa-build.sh"]
+  discover:
+    fileName: "kustomization.yaml"

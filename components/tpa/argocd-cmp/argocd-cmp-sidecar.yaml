@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1beta1
+kind: ArgoCD
+metadata:
+  name: openshift-gitops
+  namespace: openshift-gitops
+spec:
+  repo:
+    sidecarContainers:
+      - name: tpa-cmp-plugin
+        command: [/var/run/argocd/argocd-cmp-server]
+        image: registry.redhat.io/openshift-gitops-1/argocd-rhel8:latest
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 999
+        volumeMounts:
+          - mountPath: /var/run/argocd
+            name: var-files
+          - mountPath: /home/argocd/cmp-server/plugins
+            name: plugins
+          - mountPath: /tmp
+            name: tmp
+          - mountPath: /home/argocd/cmp-server/config/plugin.yaml
+            subPath: plugin.yaml
+            name: tpa-cmp-plugin
+    volumes:
+      - name: tpa-cmp-plugin
+        configMap:
+          name: tpa-cmp-plugin

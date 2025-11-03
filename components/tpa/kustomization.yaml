@@ -1,0 +1,93 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+commonAnnotations:
+  argocd.argoproj.io/sync-options: SkipDryRunOnMissingResource=true
+# ConfigMap is generated at build-time by exec plugin (see secret-generator/ConfigMapGenerator.sh)
+# Secrets are generated at runtime by ArgoCD Sync hook (see secret-generator/argocd-hook.yaml)
+resources:
+  - namespaces.yaml
+  - secret-generator/rbac.yaml
+  - secret-generator/argocd-hook.yaml
+  - subscription.yaml
+  - infrastructure.yaml
+  - keycloak-instance.yaml
+  - realm.yaml
+  - tpa-release.yaml
+generators:
+  - secret-generator/function-config.yaml
+replacements:
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.KEYCLOAK_HOSTNAME
+  targets:
+  - select:
+      kind: Route
+      name: keycloak
+    fieldPaths:
+    - spec.host
+  - select:
+      kind: Keycloak
+      name: keycloak
+    fieldPaths:
+    - spec.hostname.hostname
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI1
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.1
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI2
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.2
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI3
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.3
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.REDIRECT_URI4
+  targets:
+  - select:
+      kind: KeycloakRealmImport
+      name: keycloak-chicken
+    fieldPaths:
+    - spec.realm.clients.4.redirectUris.4
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.APP_DOMAIN_URL
+  targets:
+  - select:
+      kind: Application
+      name: trusted-profile-analyzer
+    fieldPaths:
+    - spec.source.helm.parameters.0.value
+- source:
+    kind: ConfigMap
+    name: tpa-values-source
+    fieldPath: data.OIDC_ISSUER_URL
+  targets:
+  - select:
+      kind: Application
+      name: trusted-profile-analyzer
+    fieldPaths:
+    - spec.source.helm.parameters.1.value

@@ -1,0 +1,87 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  annotations:
+    route.openshift.io/termination: reencrypt
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: keycloak
+  namespace: tssc-keycloak
+  name: keycloak
+spec:
+  host: KEYCLOAK_HOSTNAME_PLACEHOLDER
+  to:
+    kind: Service
+    name: keycloak
+    weight: 100
+  port:
+    targetPort: https
+  tls:
+    termination: reencrypt
+    insecureEdgeTerminationPolicy: Redirect
+  wildcardPolicy: None
+---
+kind: Service
+apiVersion: v1
+metadata:
+  annotations:
+    service.beta.openshift.io/serving-cert-secret-name: keycloak-tls
+    argocd.argoproj.io/sync-wave: "4"
+  namespace: tssc-keycloak
+  name: keycloak
+spec:
+  type: ClusterIP
+  ports:
+  - name: https
+    protocol: TCP
+    port: 8443
+    targetPort: 8443
+  - name: http
+    protocol: TCP
+    port: 8080
+    targetPort: 8080
+  selector:
+    app: keycloak
+    app.kubernetes.io/instance: keycloak
+    app.kubernetes.io/managed-by: keycloak-operator
+  sessionAffinity: None
+  ipFamilyPolicy: SingleStack
+  ipFamilies:
+  - IPv4
+  internalTrafficPolicy: Cluster
+---
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  annotations:
+    argocd.argoproj.io/sync-wave: "4"
+  labels:
+    app: keycloak
+  namespace: tssc-keycloak
+  name: keycloak
+spec:
+  instances: 1
+  additionalOptions:
+  - name: enable-recovery
+    value: "true"
+  transaction:
+    xaEnabled: true
+  db:
+    vendor: postgres
+    database: keycloak
+    host: keycloak-pgsql
+    usernameSecret:
+      name: keycloak-pgsql-user
+      key: user
+    passwordSecret:
+      name: keycloak-pgsql-user
+      key: password
+  hostname:
+    hostname: KEYCLOAK_HOSTNAME_PLACEHOLDER
+    strict: false
+    strictBackchannel: false
+  http:
+    httpEnabled: false
+    tlsSecret: keycloak-tls
+  ingress:
+    enabled: false

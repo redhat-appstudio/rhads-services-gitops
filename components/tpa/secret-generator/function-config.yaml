@@ -1,0 +1,8 @@
+apiVersion: tpa.rhtap.io/v1
+kind: ConfigMapGenerator
+metadata:
+  name: tpa-configmap-generator
+  annotations:
+    config.kubernetes.io/function: |
+      exec:
+        path: ./secret-generator/ConfigMapGenerator.sh
