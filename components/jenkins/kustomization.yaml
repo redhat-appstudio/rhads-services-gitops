@@ -6,5 +6,6 @@ resources:
   - namespace.yaml
   - scc.yaml
   - scc-rolebinding.yaml
+  - scc-privileged-rolebinding.yaml
   - rbac.yaml
 namespace: jenkins

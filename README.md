@@ -108,9 +108,9 @@ With OpenShift OAuth authentication, traditional Jenkins API tokens work differe
    curl -H "Authorization: Bearer <token>" https://<jenkins-url>/api/json
    ```
 
-4. Using the TSSC Jenkins Agent
+4. Using the Jenkins Agent
 
-For details on using the TSSC Jenkins Agent, see [components/jenkins/README.md](components/jenkins/README.md#usage).
+For details on using the Jenkins Agent, see [components/jenkins/README.md](components/jenkins/README.md#inline-jenkinsfile-pod-templates).
 
 ### Nexus - After deployed on new cluster perform the following to setup.
 

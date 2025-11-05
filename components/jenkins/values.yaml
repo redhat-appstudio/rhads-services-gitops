@@ -15,10 +15,6 @@ controller:
   numExecutors: 0
   # -- Name of default cloud configuration.
   cloudName: "openshift"
-  # Put labels on Jenkins controller pod
-  # -- Custom Pod labels (an object with `label-key: label-value` pairs)
-  podLabels:
-    tssc-jenkins-agent: true
   # -- Additional Java options for Jenkins controller
   javaOpts: >-
     -Dhudson.model.User.allowNonExistentUserToLogin=false
@@ -28,33 +24,110 @@ controller:
       value: "true"
     - name: OPENSHIFT_PERMISSIONS_POLL_INTERVAL
       value: "300000"
+
+  # # -- Disable use of remember me
+  disableRememberMe: true
+
+  # # -- Sets the executor mode of the Jenkins node. Possible values are "NORMAL" or "EXCLUSIVE"
+  executorMode: "NORMAL"
+
+  # # -- Append Jenkins labels to the controller
+  # customJenkinsLabels: []
+
+  # Groovy init script to dynamically discover Jenkins URL from OpenShift Route
+  initScripts:
+    discover-url: |
+      import jenkins.model.Jenkins
+      import jenkins.model.JenkinsLocationConfiguration
+      import java.security.cert.X509Certificate
+      import javax.net.ssl.SSLContext
+      import javax.net.ssl.TrustManager
+      import javax.net.ssl.X509TrustManager
+      import javax.net.ssl.HttpsURLConnection
+
+      def jenkins = Jenkins.getInstance()
+
+      try {
+          // Read namespace from serviceaccount
+          def namespace = new File('/var/run/secrets/kubernetes.io/serviceaccount/namespace').text.trim()
+          def token = new File('/var/run/secrets/kubernetes.io/serviceaccount/token').text.trim()
+
+          println "Discovering Jenkins URL from Route in namespace: ${namespace}"
+
+          // Create insecure SSL context for internal API calls
+          def trustAllCerts = [
+              new X509TrustManager() {
+                  X509Certificate[] getAcceptedIssuers() { null }
+                  void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                  void checkServerTrusted(X509Certificate[] certs, String authType) {}
+              }
+          ] as TrustManager[]
+
+          def sc = SSLContext.getInstance("TLS")
+          sc.init(null, trustAllCerts, new java.security.SecureRandom())
+
+          // Query Kubernetes API for Route
+          def apiUrl = "https://kubernetes.default.svc/apis/route.openshift.io/v1/namespaces/${namespace}/routes/jenkins"
+          def connection = new URL(apiUrl).openConnection() as HttpsURLConnection
+          connection.setRequestProperty("Authorization", "Bearer ${token}")
+          connection.setSSLSocketFactory(sc.socketFactory)
+          connection.setHostnameVerifier({ hostname, session -> true })
+
+          def response = connection.inputStream.text
+          def route = new groovy.json.JsonSlurper().parseText(response)
+          def hostname = route.spec.host
+
+          if (hostname) {
+              def jenkinsUrl = "https://${hostname}"
+              println "Discovered Jenkins URL: ${jenkinsUrl}"
+
+              // Set Jenkins location URL
+              def locationConfig = JenkinsLocationConfiguration.get()
+              locationConfig.setUrl(jenkinsUrl)
+              locationConfig.save()
+              println "Jenkins location URL configured: ${jenkinsUrl}"
+
+              // Also configure OpenShift OAuth redirect URL
+              try {
+                  def securityRealm = jenkins.getSecurityRealm()
+                  if (securityRealm != null && securityRealm.getClass().getName().contains("OpenShiftOAuth2SecurityRealm")) {
+                      // Use reflection to set the redirectURL field
+                      def redirectUrlField = securityRealm.getClass().getDeclaredField("redirectURL")
+                      redirectUrlField.setAccessible(true)
+                      redirectUrlField.set(securityRealm, jenkinsUrl + "/")
+                      jenkins.setSecurityRealm(securityRealm)
+                      jenkins.save()
+                      println "OpenShift OAuth redirect URL configured: ${jenkinsUrl}/"
+                  }
+              } catch (Exception oauthEx) {
+                  println "Note: Could not configure OAuth redirect URL directly: ${oauthEx.message}"
+              }
+
+              println "Jenkins URL configuration completed successfully"
+          } else {
+              println "WARNING: Could not discover Jenkins URL from Route - hostname was null"
+          }
+      } catch (Exception e) {
+          println "ERROR discovering Jenkins URL from Route: ${e.message}"
+          e.printStackTrace()
+      }
+
   JCasC:
-    defaultConfig: false
+    defaultConfig: true
     configScripts:
       jenkins-config: |
         jenkins:
           authorizationStrategy:
             globalMatrix:
-              entries:
-                - group:
-                    name: "authenticated"
-                    permissions:
-                      - "Overall/Read"
-          disableRememberMe: true
-          mode: NORMAL
-          numExecutors: 0
-          labelString: ""
-          markupFormatter:
-            plainText
-          slaveAgentPort: 50000
-          crumbIssuer:
-            standard:
-              excludeClientIPFromCrumb: true
-        security:
-          apiToken:
-            creationOfLegacyTokenEnabled: false
-            tokenGenerationOnCreationEnabled: false
-            usageStatisticsEnabled: true
+              permissions:
+                - "Overall/Administer:authenticated"
+    # -- Jenkins Config as Code security-section
+    security:
+      apiToken:
+        creationOfLegacyTokenEnabled: false
+        tokenGenerationOnCreationEnabled: false
+        usageStatisticsEnabled: true
+
   serviceType: ClusterIP
   servicePort: 8080
   # OpenShift 4.18 uses restricted-v2 SCC by default. To allow the init container to write to the
@@ -127,49 +200,3 @@ agent:
       cpu: "500m"
       memory: "1024Mi"
 
-  # Below is the implementation of custom pod templates for the default configured kubernetes cloud.
-  # Add a key under podTemplates for each pod template. Each key (prior to | character) is just a label, and can be any value.
-  # Keys are only used to give the pod template a meaningful name. The only restriction is they may only contain RFC 1123 \ DNS label
-  # characters: lowercase letters, numbers, and hyphens. Each pod template can contain multiple containers.
-  # For this pod templates configuration to be loaded, the following values must be set:
-  # controller.JCasC.defaultConfig: true
-  # Best reference is https://<jenkins_url>/configuration-as-code/reference#Cloud-kubernetes. The example below creates a python pod template.
-  # -- Configures extra pod templates for the default kubernetes cloud
-  podTemplates:
-    tssc: |
-      - name: tssc
-        label: tssc-jenkins-agent
-        serviceAccount: jenkins
-        namespace: jenkins
-        idleMinutes: 4
-        podRetention: Never
-        nodeUsageMode: NORMAL
-        agentInjection: true
-        containers:
-          - name: jnlp
-            image: quay.io/rhtap/tssc-jenkins-agent:latest
-            args: '$(JENKINS_SECRET) $(JENKINS_NAME)'
-            ttyEnabled: false
-            privileged: false
-            alwaysPullImage: true
-            resourceRequestCpu: "100m"
-            resourceRequestMemory: "256Mi"
-            resourceLimitCpu: "500m"
-            resourceLimitMemory: "1024Mi"
-            workingDir: "/home/jenkins/agent"
-            envVars:
-              - envVar:
-                  key: JENKINS_URL
-                  value: "http://jenkins.jenkins.svc.cluster.local:8080/"
-              - envVar:
-                  key: JENKINS_TUNNEL
-                  value: "jenkins-agent.jenkins.svc.cluster.local:50000"
-              - envVar:
-                  key: _BUILDAH_STARTED_IN_USERNS
-                  value: ""
-              - envVar:
-                  key: BUILDAH_ISOLATION
-                  value: "chroot"
-              - envVar:
-                  key: STORAGE_DRIVER
-                  value: "vfs"

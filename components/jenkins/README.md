@@ -5,10 +5,11 @@ Jenkins installation for TSSC (Trusted Software Supply Chain) with custom build 
 ## Overview
 
 This deployment provides:
-- **Jenkins Controller**: Helm chart-based Jenkins installation
-- **Custom Build Agent**: UBI9-based agent with buildah, syft, cosign, and Python 3.11
+- **Jenkins Controller**: Helm chart-based Jenkins installation with JCasC
+- **Inline Pod Templates**: Jenkinsfile-defined agent pods with single runner container
+- **Build Container**: Uses `rhtap-task-runner` with buildah, syft, cosign tools
 - **Authentication**: OpenShift OAuth (no username/password)
-- **Security**: OpenShift restricted-v2 SCC with custom SCC for buildah capabilities
+- **Security**: Privileged SCC for buildah operations, restricted-v2 for controller
 - **GitOps**: ArgoCD-managed deployment
 
 ## Architecture
@@ -23,18 +24,29 @@ This deployment provides:
                       │
                       ▼
 ┌─────────────────────────────────────────────────────┐
-│ Jenkins Build Agent (Pod Template)                  │
-│ - Image: quay.io/rhtap/tssc-jenkins-agent:latest       │
-│ - Python 3.11 (for hashlib.file_digest)            │
-│ - Buildah (rootless, chroot isolation, vfs)        │
-│ - Tools: syft, cosign, ec, jq, yq, git-lfs         │
+│ Jenkinsfile (Inline Pod Template Definition)       │
+│ - Pod spec defined in pipeline code                │
+│ - Single runner container with privileged mode     │
+└─────────────────────────────────────────────────────┘
+                      │
+                      ▼
+┌─────────────────────────────────────────────────────┐
+│ Agent Pod (Dynamic)                                 │
+│  ┌─────────────────────────────────────────────┐   │
+│  │ Runner Container                            │   │
+│  │ - rhtap-task-runner:latest                  │   │
+│  │ - Buildah (privileged mode)                 │   │
+│  │ - Tools: syft, cosign, ec, jq, yq           │   │
+│  │ - RHTAP scripts (/work/* copied to workspace)│  │
+│  └─────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
                       │
                       ▼
 ┌─────────────────────────────────────────────────────┐
 │ Security Context Constraints                        │
 │ - restricted-v2: Jenkins controller                │
-│ - jenkins-agent-base: Buildah with SETUID/SETGID   │
+│ - privileged: Runner container (buildah)           │
+│ - jenkins-agent-base: Available for custom setups  │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -44,12 +56,13 @@ This deployment provides:
 |------|---------|
 | `kustomization.yaml` | Kustomize configuration for ArgoCD |
 | `namespace.yaml` | Jenkins namespace definition |
-| `values.yaml` | Helm chart values with pod templates |
-| `scc.yaml` | Custom SCC for buildah capabilities |
+| `values.yaml` | Helm chart values (Jenkins configuration) |
+| `scc.yaml` | Custom SCC for buildah capabilities (jenkins-agent-base) |
 | `scc-rolebinding.yaml` | Binds jenkins SA to jenkins-agent-base SCC |
+| `scc-privileged-rolebinding.yaml` | Binds jenkins SA to privileged SCC for inline pod templates |
 | `rbac.yaml` | Additional RBAC for Jenkins operations |
-| `agent/Dockerfile` | Custom agent image definition (manual build) |
-| `agent/README.md` | Build instructions for custom agent image |
+| `agent/Dockerfile` | Custom agent image definition (optional) |
+| `agent/README.md` | Build instructions for custom agent image (optional) |
 
 ## Prerequisites
 
@@ -202,18 +215,166 @@ users:
 - system:serviceaccount:jenkins:jenkins
 ```
 
-### Pod Template
+**Privileged SCC for Inline Pod Templates:**
+- Grants full container privileges for inline Jenkinsfile pod templates
+- Required when using `privileged: true` in container security context
+- Enabled via `scc-privileged-rolebinding.yaml`
 
-The `tssc` pod template includes:
+**Configuration:**
+```yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: jenkins-scc-privileged
+  namespace: jenkins
+subjects:
+  - kind: ServiceAccount
+    name: jenkins
+    namespace: jenkins
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:openshift:scc:privileged
+```
 
-**Init Container (agent-injector):**
-- Copies Jenkins agent JAR from `jenkins/inbound-agent:3341.v0766d82b_dec0-1`
-- Mounts to `/agent-volume` for main container
+**When to use each SCC:**
+- **jenkins-agent-base:** Pre-configured pod templates with agent injection (requires Java in image)
+- **privileged:** Inline Jenkinsfile pod templates with advanced container operations (e.g., buildah with privileged mode)
 
-**Main Container (jnlp):**
-- Image: `quay.io/rhtap/tssc-jenkins-agent:latest`
-- Resources: 256Mi-1Gi memory, 100m-500m CPU
-- Volumes: workspace, agent JAR, buildah storage (emptyDir)
+### Inline Jenkinsfile Pod Templates
+
+The recommended approach is to define pod templates directly in Jenkinsfiles using inline Kubernetes YAML. This provides maximum flexibility and works with the `rhtap-task-runner` image.
+
+**Example Jenkinsfile:**
+
+```groovy
+pipeline {
+  agent {
+    kubernetes {
+      yaml """
+      apiVersion: v1
+      kind: Pod
+      spec:
+        containers:
+        - name: 'runner'
+          image: 'quay.io/redhat-appstudio/rhtap-task-runner:latest'
+          securityContext:
+            privileged: true
+      """
+    }
+  }
+  environment {
+    HOME = "${WORKSPACE}"
+    DOCKER_CONFIG = "${WORKSPACE}/.docker"
+    ROX_CENTRAL_ENDPOINT = credentials('ROX_CENTRAL_ENDPOINT')
+    GITOPS_AUTH_USERNAME = credentials('GITOPS_AUTH_USERNAME')
+    IMAGE_REGISTRY_USER = credentials('IMAGE_REGISTRY_USER')
+    REKOR_HOST = credentials('REKOR_HOST')
+    TUF_MIRROR = credentials('TUF_MIRROR')
+    COSIGN_PUBLIC_KEY = credentials('COSIGN_PUBLIC_KEY')
+    ROX_API_TOKEN = credentials('ROX_API_TOKEN')
+    GITOPS_AUTH_PASSWORD = credentials('GITOPS_AUTH_PASSWORD')
+    IMAGE_REGISTRY_PASSWORD = credentials('IMAGE_REGISTRY_PASSWORD')
+    COSIGN_SECRET_PASSWORD = credentials('COSIGN_SECRET_PASSWORD')
+    COSIGN_SECRET_KEY = credentials('COSIGN_SECRET_KEY')
+  }
+  stages {
+    stage('pre-init') {
+      steps {
+        container('runner') {
+          sh '''
+          cp -R /work/* .
+          env
+          git config --global --add safe.directory $WORKSPACE
+          '''
+        }
+      }
+    }
+    stage('init') {
+      steps {
+        container('runner') {
+          sh './rhtap/init.sh'
+        }
+      }
+    }
+    stage('build') {
+      steps {
+        container('runner') {
+          sh '''
+          ./rhtap/buildah-rhtap.sh
+          ./rhtap/cosign-sign-attest.sh
+          '''
+        }
+      }
+    }
+    stage('deploy') {
+      steps {
+        container('runner') {
+          sh './rhtap/update-deployment.sh'
+        }
+      }
+    }
+    stage('scan') {
+      steps {
+        container('runner') {
+          sh '''
+          ./rhtap/acs-deploy-check.sh
+          ./rhtap/acs-image-check.sh
+          ./rhtap/acs-image-scan.sh
+          '''
+        }
+      }
+    }
+    stage('summary') {
+      steps {
+        container('runner') {
+          sh '''
+          ./rhtap/show-sbom-rhdh.sh
+          ./rhtap/summary.sh
+          '''
+        }
+      }
+    }
+  }
+}
+```
+
+**Key Configuration Points:**
+- **Single container:** Uses only `rhtap-task-runner` as the runner container
+- **Privileged mode:** Required for buildah operations (`privileged: true`)
+- **SCC requirement:** Requires `scc-privileged-rolebinding.yaml` to grant privileged SCC access
+- **Environment variables:** Jenkins credentials automatically mounted for RHTAP scripts
+- **RHTAP stages:** Complete pipeline with init, build, deploy, scan, and summary stages
+- **Workspace:** HOME set to `${WORKSPACE}` for proper buildah operation
+- **Reference:** Based on [backend-tests-go-teeeknia Jenkinsfile](https://github.com/xjiangorg/backend-tests-go-teeeknia/blob/main/Jenkinsfile)
+
+### Pod Template Approaches
+
+This deployment supports two approaches for Jenkins agent pod provisioning:
+
+| Approach | Pre-configured Template | Inline Jenkinsfile Template |
+|----------|------------------------|----------------------------|
+| **Definition Location** | `values.yaml` under `agent.podTemplates` | Kubernetes YAML in Jenkinsfile |
+| **Image Requirements** | Must contain Java + Jenkins agent JAR | Any image (Java not required in build container) |
+| **SCC Used** | jenkins-agent-base (SETUID/SETGID) | privileged (full container access) |
+| **Reusability** | Shared across all pipelines | Per-pipeline customization |
+| **Security Constraints** | More restrictive (SETUID/SETGID only) | Less restrictive (privileged mode) |
+| **Flexibility** | Limited to predefined templates | Full pod spec control per pipeline |
+| **Current Status** | No templates configured | ✅ **Recommended approach** |
+
+**Why inline templates are recommended:**
+
+1. **Image compatibility:** Works with the `rhtap-task-runner` image that contains all RHTAP tools
+2. **Flexibility:** Each pipeline can define custom pod specifications
+3. **Simplicity:** Single container approach with privileged mode for buildah
+4. **Privileged operations:** Full support for advanced buildah operations
+
+**When to use pre-configured templates:**
+
+- Custom agent images with Java runtime pre-installed
+- Shared agent configuration across many pipelines
+- Need to restrict pipeline authors from modifying pod specs
+- Using agent injection pattern with compatible images
 
 ## Troubleshooting
 
@@ -253,6 +414,61 @@ Should show: `system:serviceaccount:jenkins:jenkins`
 - Set `_BUILDAH_STARTED_IN_USERNS=""`
 - Remove UID/GID remapping from storage.conf
 
+### Issue: Pod fails with "cannot set uid to unmapped user in user namespace"
+
+**Cause:** Using `privileged: false` with SETUID/SETGID capabilities in inline Jenkinsfile pod template.
+
+**Solution:** Choose one of the following approaches:
+
+1. **Use privileged mode** (recommended for inline templates):
+   ```yaml
+   securityContext:
+     privileged: true
+   ```
+   Requires `scc-privileged-rolebinding.yaml` to be deployed.
+
+2. **Use jenkins-agent-base SCC** (for pre-configured templates):
+   - Remove `privileged: true`
+   - Ensure pod uses jenkins-agent-base SCC with SETUID/SETGID capabilities
+   - Only works with pre-configured pod templates in `values.yaml`
+
+3. **Remove SETUID/SETGID requirements:**
+   - Use overlay storage driver if supported
+   - Not recommended for OpenShift restricted environments
+
+### Issue: "jenkins-agent not found" or exit code 127 when using rhtap-task-runner
+
+**Cause:** Incorrect pod template configuration or missing container name specification.
+
+**Solution:** Use the single-container pattern with proper container reference:
+
+```yaml
+agent {
+  kubernetes {
+    yaml """
+    apiVersion: v1
+    kind: Pod
+    spec:
+      containers:
+      - name: 'runner'
+        image: 'quay.io/redhat-appstudio/rhtap-task-runner:latest'
+        securityContext:
+          privileged: true
+    """
+  }
+}
+```
+
+Execute build commands by specifying the runner container:
+
+```groovy
+container('runner') {
+    sh './rhtap/buildah-rhtap.sh'
+}
+```
+
+**Note:** The Kubernetes plugin automatically handles the Jenkins agent in the background when using inline pod templates.
+
 ## Maintenance
 
 ### Update Agent Image
@@ -277,11 +493,14 @@ Should show: `system:serviceaccount:jenkins:jenkins`
 |----------|-----------|
 | **VFS storage driver** | Overlay requires FUSE (unavailable in restricted SCC) |
 | **Chroot isolation** | Avoids user namespace requirements |
-| **Python 3.11** | Required for `hashlib.file_digest()` in merge_sboms.py |
+| **Inline pod templates** | Maximum flexibility for images without Java runtime |
+| **Privileged SCC** | Required for advanced buildah operations in inline templates |
 | **UID 1001 / GID 0** | OpenShift arbitrary UID standard with root group |
 | **No UID/GID remapping** | Prevents /etc/subuid errors with chroot isolation |
-| **SETUID/SETGID in SCC** | Required for newuidmap/newgidmap capabilities |
-| **Agent injection pattern** | Allows custom base image with Jenkins agent JAR |
+| **SETUID/SETGID in jenkins-agent-base SCC** | Available for rootless buildah with agent injection (if needed) |
+| **rhtap-task-runner image** | Contains buildah, cosign, syft and all RHTAP tools |
+| **Single-container pattern** | Runner container with privileged mode, agent handled by Kubernetes plugin |
+| **WORKSPACE as HOME** | Required for buildah to write to correct directory |
 
 ## References
 
