@@ -136,21 +136,24 @@ Key settings:
 - `excludeClientIPFromCrumb: true` - CSRF protection compatible with proxies/load balancers
 - API token settings - Controls token creation behavior
 
-**RBAC Configuration:**
+**RBAC and ServiceAccount Configuration:**
 
-ServiceAccount with OAuth redirect annotation in `values.yaml`:
+RBAC and ServiceAccount configuration in `values.yaml`:
 
 ```yaml
 rbac:
   create: true
   useOpenShiftNonRootSCC: true
-  serviceAccount:
-    create: true
-    name: "jenkins"
-    annotations:
-      serviceaccounts.openshift.io/oauth-redirectreference.jenkins:
-        '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
+
+serviceAccount:
+  create: true
+  name: "jenkins"
+  annotations:
+    serviceaccounts.openshift.io/oauth-redirectreference.jenkins:
+      '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
 ```
+
+**Important**: The `serviceAccount` section must be at the **top level**, not nested under `rbac`. The Jenkins Helm chart (version 5.8.104) does not support `rbac.serviceAccount.annotations`.
 
 The OAuth redirect annotation is **critical** - it enables dynamic Route-based redirect URL resolution without requiring a separate OAuthClient resource.
 

@@ -96,11 +96,12 @@ rbac:
   create: true
   # This is important for OpenShift to manage SCCs correctly.
   useOpenShiftNonRootSCC: true
-  serviceAccount:
-    create: true
-    name: "jenkins"
-    annotations:
-      serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
+
+serviceAccount:
+  create: true
+  name: "jenkins"
+  annotations:
+    serviceaccounts.openshift.io/oauth-redirectreference.jenkins: '{"kind":"OAuthRedirectReference","apiVersion":"v1","reference":{"kind":"Route","name":"jenkins"}}'
 
 agent:
   # -- Enable Kubernetes plugin jnlp-agent podTemplate
