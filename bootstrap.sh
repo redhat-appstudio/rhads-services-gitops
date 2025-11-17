@@ -63,6 +63,12 @@ spec:
 EOF
 }
 
+
+register_cluster() {
+    echo "Registering Cluster"
+    ./components/register-cluster/register_cluster.sh
+}
+
 create_app_of_apps(){
     echo "Creating app of apps"
     oc create -f ./app-of-apps.yaml
@@ -73,4 +79,5 @@ wait_for_route
 grant_admin_role_to_all_authenticated_users
 patch_argocd_instance
 create_namespace_and_AppProject
+register_cluster
 create_app_of_apps

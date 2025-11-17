@@ -1,24 +1,95 @@
 apiVersion: argoproj.io/v1alpha1
-kind: Application
+kind: ApplicationSet
 metadata:
-  name: tpa
-  namespace: gitops-resources
+  name: tpa-service
+  namespace: openshift-gitops
 spec:
-  destination:
-    server: https://kubernetes.default.svc
-    namespace: tssc-tpa
-  project: gitops-resources
-  source:
-    repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
-    path: ./components/tpa
-    targetRevision: HEAD
-  syncPolicy:
-    managedNamespaceMetadata:
-      labels:
-        argocd.argoproj.io/managed-by: openshift-gitops
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
-      - PruneLast=true
+  goTemplate: true
+  goTemplateOptions: ["missingkey=error"]
+  generators:
+    - clusters:
+        selector:
+          matchLabels:
+            cluster-service-app: "true"
+  template:
+    metadata:
+      name: 'tpa'
+      namespace: gitops-resources
+    spec:
+      project: gitops-resources
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: tssc-tpa
+      source:
+        repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
+        path: ./components/tpa
+        targetRevision: HEAD
+        kustomize:
+          patches:
+            - patch: |
+                - op: replace
+                  path: /spec/host
+                  value: "{{ index .metadata.annotations "KChost" }}"
+              target:
+                kind: Route
+                name: keycloak
+            - patch: |
+                - op: replace
+                  path: /spec/hostname/hostname
+                  value: "{{ index .metadata.annotations "KChost" }}"
+              target:
+                kind: Keycloak
+                name: keycloak
+            - patch: |
+                - op: replace
+                  path: /spec/realm/clients/4/redirectUris/1
+                  value: "{{ index .metadata.annotations "redirect1" }}"
+              target:
+                kind: KeycloakRealmImport
+                name: keycloak-chicken
+            - patch: |
+                - op: replace
+                  path: /spec/realm/clients/4/redirectUris/2
+                  value: "{{ index .metadata.annotations "redirect2" }}"
+              target:
+                kind: KeycloakRealmImport
+                name: keycloak-chicken
+            - patch: |
+                - op: replace
+                  path: /spec/realm/clients/4/redirectUris/3
+                  value: "{{ index .metadata.annotations "redirect3" }}"
+              target:
+                kind: KeycloakRealmImport
+                name: keycloak-chicken
+            - patch: |
+                - op: replace
+                  path: /spec/realm/clients/4/redirectUris/4
+                  value: "{{ index .metadata.annotations "redirect4" }}"
+              target:
+                kind: KeycloakRealmImport
+                name: keycloak-chicken
+            - patch: |
+                - op: replace
+                  path: /spec/source/helm/parameters/0/value
+                  value: "{{ index .metadata.annotations "AppDomain" }}"
+              target:
+                kind: Application
+                name: trusted-profile-analyzer
+            - patch: |
+                - op: replace
+                  path: /spec/source/helm/parameters/1/value
+                  value: "{{ index .metadata.annotations "OIDCissuer" }}"
+              target:
+                kind: Application
+                name: trusted-profile-analyzer
+      syncPolicy:
+        managedNamespaceMetadata:
+          labels:
+            argocd.argoproj.io/managed-by: openshift-gitops
+        automated:
+          prune: true
+          selfHeal: true
+        syncOptions:
+          - CreateNamespace=true
+          - PruneLast=true
+

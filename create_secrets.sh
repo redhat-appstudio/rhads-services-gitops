@@ -6,9 +6,6 @@ source ./envfile
 oc new-project hive
 oc new-project artifactory
 
-# Setup cluster.env for TPA
-./ClusterEnv.sh
-
 # Create secrets
 echo "Creating Pull Secret"
 oc create secret generic global-pull-secret --type=kubernetes.io/dockerconfigjson --from-literal=.dockerconfigjson="$PULL_SECRET" -n hive

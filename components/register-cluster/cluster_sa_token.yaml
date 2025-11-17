@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cluster-argocd-manager-token
+  namespace: kube-system
+  annotations:
+    kubernetes.io/service-account.name: cluster-argocd-manager
+type: kubernetes.io/service-account-token
