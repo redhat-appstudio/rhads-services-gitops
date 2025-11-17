@@ -10,9 +10,12 @@ kubectl create clusterrolebinding cluster-argocd-manager-binding --clusterrole=a
 kubectl apply -f components/register-cluster/cluster_sa_token.yaml
 
 # Set Server variables
-export SERVER_URL=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null)
-export CA_DATA=$(kubectl get cm kube-root-ca.crt -o jsonpath="{['data']['ca\\.crt']}" | base64 -w 0)
-export BTOKEN=$(kubectl get secret cluster-argocd-manager-token -n kube-system -o jsonpath="{.data.token}" | base64 --decode)
+SERVER_URL=$(kubectl config view --minify -o jsonpath='{.clusters[0].cluster.server}' 2>/dev/null)
+export SERVER_URL
+CA_DATA=$(kubectl get cm kube-root-ca.crt -o jsonpath="{['data']['ca\\.crt']}" | base64 -w 0)
+export CA_DATA
+BTOKEN=$(kubectl get secret cluster-argocd-manager-token -n kube-system -o jsonpath="{.data.token}" | base64 --decode)
+export BTOKEN
 
 # Set namespace variables
 TPA_NAMESPACE="tssc-tpa"
@@ -22,10 +25,10 @@ REALM="chicken"
 export APP_DOMAIN_URL="-${TPA_NAMESPACE}.${INGRESS_DOMAIN}"
 export KEYCLOAK_HOST="sso.${INGRESS_DOMAIN}"
 export OIDC_ISSUER_URL="https://sso.${INGRESS_DOMAIN}/realms/${REALM}"
-export REDIRECT_URI1=https://server${APP_DOMAIN_URL}
-export REDIRECT_URI2=https://server${APP_DOMAIN_URL}/*
-export REDIRECT_URI3=https://sbom${APP_DOMAIN_URL}
-export REDIRECT_URI4=https://sbom${APP_DOMAIN_URL}/*
+export REDIRECT_URI1="https://server${APP_DOMAIN_URL}"
+export REDIRECT_URI2="https://server${APP_DOMAIN_URL}/*"
+export REDIRECT_URI3="https://sbom${APP_DOMAIN_URL}"
+export REDIRECT_URI4="https://sbom${APP_DOMAIN_URL}/*"
 
 # Add Cluster secret to register
 envsubst < components/register-cluster/cluster_secret.yaml | kubectl apply -f -
