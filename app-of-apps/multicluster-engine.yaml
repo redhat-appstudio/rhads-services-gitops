@@ -15,7 +15,7 @@ spec:
   project: gitops-resources
   source:
     path: ./components/multicluster-engine
-    repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
+    repoURL: https://github.com/redhat-appstudio/rhads-services-gitops
     targetRevision: main
   destination:
     namespace: multicluster-engine

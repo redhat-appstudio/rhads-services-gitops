@@ -9,7 +9,7 @@ spec:
     server: https://kubernetes.default.svc
   project: gitops-resources
   sources:
-    - repoURL: "https://github.com/redhat-appstudio/rhtap-services-gitops.git"
+    - repoURL: "https://github.com/redhat-appstudio/rhads-services-gitops.git"
       targetRevision: main
       path: "components/jenkins"
     - repoURL: https://charts.jenkins.io
@@ -19,7 +19,7 @@ spec:
         releaseName: jenkins
         valueFiles:
           - $values/components/jenkins/values.yaml
-    - repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops.git
+    - repoURL: https://github.com/redhat-appstudio/rhads-services-gitops.git
       targetRevision: main
       ref: values
   syncPolicy:

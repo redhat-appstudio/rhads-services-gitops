@@ -21,7 +21,7 @@ spec:
         server: https://kubernetes.default.svc
         namespace: tssc-tpa
       source:
-        repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
+        repoURL: https://github.com/redhat-appstudio/rhads-services-gitops
         path: ./components/tpa
         targetRevision: HEAD
         kustomize:

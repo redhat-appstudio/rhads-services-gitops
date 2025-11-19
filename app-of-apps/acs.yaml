@@ -9,7 +9,7 @@ metadata:
 spec:
   project: gitops-resources
   source:
-    repoURL: https://github.com/redhat-appstudio/rhtap-services-gitops
+    repoURL: https://github.com/redhat-appstudio/rhads-services-gitops
     targetRevision: main
     path: "components/acs"
   destination:
