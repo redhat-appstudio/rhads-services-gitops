@@ -6,6 +6,9 @@ artifactory:
     enabled: false
 
   artifactory:
+    persistence:
+      enabled: true  # Ensure persistence is enabled (it is by default)
+      size: 500Gi
     podSecurityContext:
       enabled: false
     containerSecurityContext:
@@ -31,6 +34,9 @@ artifactory:
     auth:
       password: "a-strong-password"
     primary:
+      persistence:
+        enabled: true
+        size: 200Gi
       podSecurityContext:
         enabled: false
       securityContext:
