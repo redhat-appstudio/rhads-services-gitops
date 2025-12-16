@@ -6,6 +6,9 @@ artifactory:
     enabled: false
 
   artifactory:
+    persistence:
+      enabled: true  # Ensure persistence is enabled (it is by default)
+      existingClaim: "artifactory-volume-jfrog-container-registry-artifactory-0"
     podSecurityContext:
       enabled: false
     containerSecurityContext:
@@ -31,6 +34,9 @@ artifactory:
     auth:
       password: "a-strong-password"
     primary:
+      persistence:
+        enabled: true
+        existingClaim: "data-jfrog-container-registry-postgresql-0"
       podSecurityContext:
         enabled: false
       securityContext:
