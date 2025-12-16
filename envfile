@@ -4,6 +4,6 @@
 # export PULL_SECRET='{"auths":{"cloud.openshift.com":{"auth":"=","email":"my@email.com"},"quay.io":{"auth":"=","email":"my@email.com"},"registry.connect.redhat.com":{"auth":"","email":"my@email.com"},"registry.redhat.io":{"auth":"","email":"my@email.com"}}}'
 export PULL_SECRET=
 
-# rhtap-services AWS
+# rhads-services AWS
 export AWS_ACCESS_KEY_ID=
 export AWS_SECRET_ACCESS_KEY=
