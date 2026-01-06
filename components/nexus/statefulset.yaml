@@ -25,13 +25,8 @@ spec:
           volumeMounts:
             - mountPath: /nexus-data
               name: nexus-data
-  volumeClaimTemplates:
-    - metadata:
-        name: nexus-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: 500Gi
+      volumes:
+        - name: nexus-data
+          persistentVolumeClaim:
+            claimName: nexus-data-nexus-0
 

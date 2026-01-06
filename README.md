@@ -116,15 +116,15 @@ For details on using the Jenkins Agent, see [components/jenkins/README.md](compo
 
 1. Login to Nexus console with the following url
 ```
-$ echo "http://$(kubectl -n nexus get route nexus-ui -o 'jsonpath={.spec.host}')"
+$ echo "https://$(kubectl -n nexus get route nexus-ui -o 'jsonpath={.spec.host}')"
 ```
 username is `admin`,  The password can be found in the `/nexus-data/admin.password` file in the nexus pod.
 
-2. When you login to Nexus first time, It will pop up an initial setup widown, you need to fill in new password, accept EULA and choose `Enable Anonymous Access`
+2. When you login to Nexus first time, It will pop up an initial setup wizard window, you need to fill in new password, accept EULA and choose `Enable Anonymous Access`
 
 3. Click on Settings -> repository -> Repositories -> Create repository and choose docker (hosted) repository.
 
-4. Provide the port number `8082` for HTTP, enable the `Docker v1 api` and enable `Allow anonymous docker pull`. After that,  click on `create` at the bottom of the page.
+4. Provide Name, the port number `8082` for HTTP, enable the `Docker v1 api` and enable `Allow anonymous docker pull`. After that,  click on `create` at the bottom of the page.
 
 5. Go to the `Realms` under `Security` on the left navigation bar and click on `Docker Bearer Token Realm` and save the settings.
 
