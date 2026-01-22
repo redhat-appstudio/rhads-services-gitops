@@ -8,6 +8,8 @@ resources:
   - subscription.yaml
   - multiClusterEngine.yaml
   - hiveconfig.yaml
-  - clusterPool.yaml
+  - clusterPool418.yaml
+  - clusterPool419.yaml
+  - clusterPool420.yaml
   - install-config-template-secret.yaml
 
