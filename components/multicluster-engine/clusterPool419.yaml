@@ -1,0 +1,27 @@
+apiVersion: hive.openshift.io/v1
+kind: ClusterPool
+metadata:
+  name: clusterpool419
+  namespace: hive
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+spec:
+  baseDomain: rhtap.devcluster.openshift.com
+  imageSetRef:
+    name: img4.19.21-multi-appsub
+  platform:
+    aws:
+      credentialsSecretRef:
+        name: hive-aws-creds
+      region: us-east-1
+  installConfigSecretTemplateRef:
+    name: install-config-template
+  pullSecretRef:
+    name: global-pull-secret
+  claimLifetime:
+    default: 2h
+    maximum: 8h
+  runningCount: 0
+  size: 1
+  maxConcurrent: 2
+
