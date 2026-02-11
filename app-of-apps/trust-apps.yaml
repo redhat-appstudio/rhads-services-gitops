@@ -11,8 +11,6 @@ spec:
         selector:
           matchLabels:
             cluster-service-app: "true"
-  syncPolicy:
-    preserveResourcesOnDeletion: true
   template:
     metadata:
       name: 'trust-apps'
@@ -106,7 +104,7 @@ spec:
                   value: "{{ index .metadata.annotations "tasEmail" }}"
               target:
                 kind: KeycloakRealmImport
-                name: keycloak-chicken
+                name: trusted-artifact-signer
             - patch: |
                 - op: replace
                   path: /spec/fulcio/config/OIDCIssuers/0/Issuer
