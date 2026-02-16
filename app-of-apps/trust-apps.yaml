@@ -108,7 +108,7 @@ spec:
             - patch: |
                 - op: replace
                   path: /spec/fulcio/config/OIDCIssuers/0/Issuer
-                  # Securesign Isuer patch
+                  # Securesign Issuer patch
                   value: "{{ index .metadata.annotations "tasIssuer" }}"
               target:
                 kind: Securesign
